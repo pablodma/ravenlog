@@ -1,0 +1,18 @@
+# Vercel ignore file
+node_modules
+.git
+.env*
+*.log
+coverage
+.nyc_output
+dist
+build
+.next
+.nuxt
+.vuepress/dist
+.serverless
+.idea
+.vscode
+*.swp
+*.swo
+*~

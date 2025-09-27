@@ -1,0 +1,33 @@
+{
+  "name": "ravenlog",
+  "version": "1.0.0",
+  "description": "Sistema de gestión de personal para unidad aérea militar simulada",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "build": "npm run build --workspace=shared && npm run build --workspace=frontend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "build:backend": "npm run build --workspace=backend",
+    "start": "npm run start --workspace=backend",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces",
+    "db:generate-types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > shared/src/types/database.ts",
+    "setup": "npm install && npm run build --workspace=shared",
+    "vercel-build": "npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "supabase": "^1.123.4",
+    "@types/node": "^20.8.10"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
