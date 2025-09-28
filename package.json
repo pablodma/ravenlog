@@ -6,7 +6,7 @@
   "description": "Sistema de gestión de personal para unidad aérea militar simulada",
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:shared && tsc && vite build",
+    "build": "npm run build:shared && tsc && vite build", 
     "build:shared": "cd shared && npm install && npm run build",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
