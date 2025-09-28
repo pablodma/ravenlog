@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import type { Tables } from '@ravenlog/shared'
@@ -82,15 +82,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const user = await supabase.auth.getUser()
       if (!user.data.user) return
 
-      const { data, error } = await supabase
+      const profileData = {
+        id: userId,
+        email: user.data.user.email!,
+        full_name: user.data.user.user_metadata?.full_name || null,
+        avatar_url: user.data.user.user_metadata?.avatar_url || null,
+        role: 'candidate' as const
+      }
+
+      const { data, error } = await (supabase as any)
         .from('profiles')
-        .insert({
-          id: userId,
-          email: user.data.user.email!,
-          full_name: user.data.user.user_metadata?.full_name || null,
-          avatar_url: user.data.user.user_metadata?.avatar_url || null,
-          role: 'candidate'
-        })
+        .insert([profileData])
         .select()
         .single()
 

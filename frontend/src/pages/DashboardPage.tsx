@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { useAuth } from '@/contexts/AuthContext'
 import { Users, Award, Medal, UserPlus, Activity, Calendar } from 'lucide-react'
 
