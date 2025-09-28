@@ -1,9 +1,9 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "$schema": "https://openapi.vercel.sh/vercel.json", 
   "version": 2,
-  "buildCommand": "npm run build --workspace=shared && npm run build --workspace=frontend",
+  "buildCommand": "cd shared && npm install && npm run build && cd ../frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
-  "installCommand": "npm install",
+  "installCommand": "echo 'Skipping root install'",
   "framework": null,
   "routes": [
     {
