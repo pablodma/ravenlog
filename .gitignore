@@ -130,3 +130,5 @@ Thumbs.db
 .temp
 .import
 .migration_tmp
+*.json
+client_secret_*.json

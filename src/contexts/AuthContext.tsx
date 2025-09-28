@@ -112,10 +112,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
+      // Detectar si estamos en desarrollo o producción
+      const isProduction = window.location.hostname !== 'localhost'
+      const redirectTo = isProduction 
+        ? 'https://ravenlog-dcs.vercel.app/' 
+        : 'http://localhost:3000/'
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo
         }
       })
       
