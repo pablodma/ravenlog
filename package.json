@@ -1,33 +1,44 @@
 {
   "name": "ravenlog",
-  "version": "1.0.0",
-  "description": "Sistema de gestión de personal para unidad aérea militar simulada",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "backend",
-    "shared"
-  ],
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Sistema de gestión de personal para unidad aérea militar simulada",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:frontend": "npm run dev --workspace=frontend",
-    "dev:backend": "npm run dev --workspace=backend",
-    "build": "npm run build --workspace=shared && npm run build --workspace=frontend",
-    "build:frontend": "npm run build --workspace=frontend",
-    "build:backend": "npm run build --workspace=backend",
-    "start": "npm run start --workspace=backend",
-    "lint": "npm run lint --workspaces",
-    "test": "npm run test --workspaces",
-    "db:generate-types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > shared/src/types/database.ts",
-    "setup": "npm install && npm run build --workspace=shared",
-    "vercel-build": "npm run build"
+    "dev": "vite",
+    "build": "npm run build:shared && tsc && vite build",
+    "build:shared": "cd shared && npm install && npm run build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.18.0",
+    "@supabase/supabase-js": "^2.38.4",
+    "@tanstack/react-query": "^5.8.4",
+    "react-hook-form": "^7.47.0",
+    "@hookform/resolvers": "^3.3.2",
+    "zod": "^3.22.4",
+    "lucide-react": "^0.292.0",
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.0.0",
+    "date-fns": "^2.30.0",
+    "react-hot-toast": "^2.4.1"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "supabase": "^1.123.4",
-    "@types/node": "^20.8.10"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
+    "@vitejs/plugin-react": "^4.1.0",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.53.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.4",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.5",
+    "typescript": "^5.2.2",
+    "vite": "^4.5.0"
   }
 }
