@@ -77,6 +77,8 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
         errorMessage = 'Las tablas del calendario no están disponibles. Contacta al administrador.';
       } else if (err.message?.includes('permission denied')) {
         errorMessage = 'No tienes permisos para acceder al calendario.';
+      } else if (err.code === 'PGRST106' || err.message?.includes('relation') || err.message?.includes('does not exist')) {
+        errorMessage = 'El módulo de calendario no está configurado. Ejecuta el script de migración SQL.';
       }
       
       setError(errorMessage);
@@ -242,8 +244,21 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
           <Calendar className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">No hay eventos</h3>
           <p className="mt-1 text-sm text-gray-500">
-            No se encontraron eventos para el período seleccionado.
+            {eventTypes.length === 0 
+              ? 'El módulo de calendario no está configurado. Ejecuta el script SQL de migración.'
+              : 'No se encontraron eventos para el período seleccionado.'
+            }
           </p>
+          {eventTypes.length === 0 && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg max-w-md mx-auto">
+              <p className="text-sm text-yellow-800">
+                <strong>Instrucciones:</strong><br/>
+                1. Ve al SQL Editor de Supabase<br/>
+                2. Ejecuta el script <code>create_calendar_tables_simple.sql</code><br/>
+                3. Recarga esta página
+              </p>
+            </div>
+          )}
         </div>
       );
     }

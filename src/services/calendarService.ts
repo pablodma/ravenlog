@@ -108,13 +108,26 @@ export interface CreateEventData {
 export class CalendarService {
   // TIPOS DE EVENTOS
   static async getEventTypes(): Promise<EventType[]> {
-    const { data, error } = await (supabase as any)
-      .from('event_types')
-      .select('*')
-      .order('name');
+    try {
+      const { data, error } = await (supabase as any)
+        .from('event_types')
+        .select('*')
+        .order('name');
 
-    if (error) throw error;
-    return data || [];
+      if (error) {
+        console.warn('Event types table not found, using defaults:', error);
+        // Devolver tipos por defecto si la tabla no existe
+        return [
+          { id: '1', name: 'Misión de Combate', description: 'Operaciones de combate aéreo', color: '#EF4444', icon: 'target', is_system_type: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+          { id: '2', name: 'Entrenamiento BVR', description: 'Beyond Visual Range training', color: '#3B82F6', icon: 'radar', is_system_type: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+          { id: '3', name: 'Vuelo Libre', description: 'Sesión de vuelo libre', color: '#6B7280', icon: 'wind', is_system_type: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+        ];
+      }
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching event types:', error);
+      return [];
+    }
   }
 
   static async createEventType(eventType: Omit<EventType, 'id' | 'created_at' | 'updated_at'>): Promise<EventType> {
@@ -166,8 +179,10 @@ export class CalendarService {
         .limit(1);
       
       if (tableError) {
-        console.error('Calendar table check failed:', tableError);
-        throw new Error(`Calendar table not accessible: ${tableError.message}`);
+        console.warn('Calendar table not found:', tableError);
+        console.log('📅 Calendar tables not created yet. Please run the SQL migration script.');
+        // Devolver array vacío si las tablas no existen
+        return [];
       }
 
       // Consulta simplificada para evitar errores de JOIN
