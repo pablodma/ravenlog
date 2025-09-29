@@ -173,7 +173,7 @@ export class CalendarService {
       console.log('CalendarService.getEvents called with filters:', filters);
       
       // Primero verificar si las tablas existen
-      const { data: tableCheck, error: tableError } = await (supabase as any)
+      const { error: tableError } = await (supabase as any)
         .from('flight_events_calendar')
         .select('id')
         .limit(1);
