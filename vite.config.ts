@@ -10,6 +10,18 @@ export default defineConfig({
       "@ravenlog/shared": path.resolve(__dirname, "./shared/src")
     },
   },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          supabase: ['@supabase/supabase-js']
+        }
+      }
+    }
+  },
   server: {
     port: 3000,
   },
