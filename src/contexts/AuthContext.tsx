@@ -189,8 +189,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Detectar si estamos en desarrollo o producción
       const isProduction = window.location.hostname !== 'localhost'
       const redirectTo = isProduction 
-        ? 'https://ravenlog-dcs.vercel.app/' 
-        : 'http://localhost:3000/'
+        ? 'https://ravenlog-dcs.vercel.app/auth/callback' 
+        : 'http://localhost:3000/auth/callback'
 
       console.log('🔗 signInWithGoogle: redirectTo =', redirectTo)
 
