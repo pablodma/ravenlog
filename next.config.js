@@ -8,6 +8,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Excluir páginas de React Router del build
+  pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
   // Configuración para Supabase
   async headers() {
     return [

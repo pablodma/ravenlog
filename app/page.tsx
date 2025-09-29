@@ -14,7 +14,7 @@ export default function HomePage() {
     if (!loading) {
       if (!user) {
         router.push('/login')
-      } else if (profile) {
+      } else {
         router.push('/dashboard')
       }
     }
