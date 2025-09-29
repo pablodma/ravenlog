@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { Shield, Users, Settings, Grid, Key } from 'lucide-react'
+import { Shield, Users, Settings, Grid, Key, Award, Star } from 'lucide-react'
 import PermissionManager from '@/components/admin/PermissionManager'
 import RoleManager from '@/components/admin/RoleManager'
 import RolePermissionMatrix from '@/components/admin/RolePermissionMatrix'
+import MedalManager from '@/components/admin/MedalManager'
+import RankManager from '@/components/admin/RankManager'
 
-type TabType = 'overview' | 'permissions' | 'roles' | 'matrix' | 'users'
+type TabType = 'overview' | 'permissions' | 'roles' | 'matrix' | 'users' | 'medals' | 'ranks'
 
 export default function AdminPage() {
   const { profile } = useAuth()
@@ -16,6 +18,8 @@ export default function AdminPage() {
     { id: 'permissions' as TabType, name: 'Permisos', icon: Key },
     { id: 'roles' as TabType, name: 'Roles', icon: Shield },
     { id: 'matrix' as TabType, name: 'Asignaciones', icon: Settings },
+    { id: 'medals' as TabType, name: 'Medallas', icon: Award },
+    { id: 'ranks' as TabType, name: 'Rangos', icon: Star },
     { id: 'users' as TabType, name: 'Usuarios', icon: Users },
   ]
 
@@ -27,6 +31,10 @@ export default function AdminPage() {
         return <RoleManager />
       case 'matrix':
         return <RolePermissionMatrix />
+      case 'medals':
+        return <MedalManager />
+      case 'ranks':
+        return <RankManager />
       case 'users':
         return (
           <div className="text-center py-12">
