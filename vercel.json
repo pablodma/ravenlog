@@ -5,5 +5,10 @@
   "outputDirectory": ".next",
   "env": {
     "NODE_ENV": "production"
+  },
+  "functions": {
+    "app/auth/callback/page.tsx": {
+      "maxDuration": 30
+    }
   }
 }
