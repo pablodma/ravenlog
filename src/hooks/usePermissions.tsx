@@ -31,7 +31,7 @@ export function usePermissions() {
           permission_id,
           permissions!inner(name)
         `)
-        .eq('role_id', profile?.role_id)
+        .eq('role_id', profile?.role_id!)
 
       if (error) throw error
 
