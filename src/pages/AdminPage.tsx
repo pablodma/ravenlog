@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { Shield, Users, Settings, Grid, Key, Award, Star, Plane, FileText } from 'lucide-react'
+import { Shield, Users, Settings, Grid, Key, Award, Star, Plane, FileText, Eye, UserCheck } from 'lucide-react'
 import PermissionManager from '@/components/admin/PermissionManager'
 import RoleManager from '@/components/admin/RoleManager'
 import RolePermissionMatrix from '@/components/admin/RolePermissionMatrix'
@@ -8,8 +8,10 @@ import MedalManager from '@/components/admin/MedalManager'
 import RankManager from '@/components/admin/RankManager'
 import UnitManager from '@/components/admin/UnitManager'
 import FormBuilder from '@/components/admin/FormBuilder'
+import ApplicationReview from '@/components/admin/ApplicationReview'
+import CandidateProcessor from '@/components/admin/CandidateProcessor'
 
-type TabType = 'overview' | 'permissions' | 'roles' | 'matrix' | 'users' | 'medals' | 'ranks' | 'units' | 'forms'
+type TabType = 'overview' | 'permissions' | 'roles' | 'matrix' | 'users' | 'medals' | 'ranks' | 'units' | 'forms' | 'applications' | 'processing'
 
 export default function AdminPage() {
   const { profile } = useAuth()
@@ -17,18 +19,26 @@ export default function AdminPage() {
 
   const tabs = [
     { id: 'overview' as TabType, name: 'Resumen', icon: Grid },
+    { id: 'applications' as TabType, name: 'Aplicaciones', icon: Eye },
+    { id: 'processing' as TabType, name: 'Procesamiento', icon: UserCheck },
+    { id: 'forms' as TabType, name: 'Formularios', icon: FileText },
     { id: 'permissions' as TabType, name: 'Permisos', icon: Key },
     { id: 'roles' as TabType, name: 'Roles', icon: Shield },
     { id: 'matrix' as TabType, name: 'Asignaciones', icon: Settings },
     { id: 'medals' as TabType, name: 'Medallas', icon: Award },
     { id: 'ranks' as TabType, name: 'Rangos', icon: Star },
     { id: 'units' as TabType, name: 'Unidades', icon: Plane },
-    { id: 'forms' as TabType, name: 'Formularios', icon: FileText },
     { id: 'users' as TabType, name: 'Usuarios', icon: Users },
   ]
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'applications':
+        return <ApplicationReview />
+      case 'processing':
+        return <CandidateProcessor />
+      case 'forms':
+        return <FormBuilder />
       case 'permissions':
         return <PermissionManager />
       case 'roles':
@@ -41,8 +51,6 @@ export default function AdminPage() {
         return <RankManager />
       case 'units':
         return <UnitManager />
-      case 'forms':
-        return <FormBuilder />
       case 'users':
         return (
           <div className="text-center py-12">
