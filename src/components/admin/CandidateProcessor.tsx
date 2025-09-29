@@ -103,7 +103,7 @@ export default function CandidateProcessor() {
     } catch (error) {
       console.error('Error fetching data:', error)
       console.error('Error details:', JSON.stringify(error, null, 2))
-      toast.error(`Error al cargar datos: ${error.message || 'Error desconocido'}`)
+      toast.error(`Error al cargar datos: ${(error as any)?.message || 'Error desconocido'}`)
     } finally {
       setLoading(false)
     }
@@ -329,7 +329,7 @@ export default function CandidateProcessor() {
                     <h4 className="font-medium text-green-900 mb-2">Resumen del Procesamiento</h4>
                     <div className="space-y-1 text-sm text-green-800">
                       <p><strong>Candidato:</strong> {selectedApplication.applicant.full_name}</p>
-                      <p><strong>Rango:</strong> {selectedRankData?.title}</p>
+                      <p><strong>Rango:</strong> {selectedRankData?.name}</p>
                       <p><strong>Unidad:</strong> {selectedUnitData?.name}</p>
                       <p><strong>Rol:</strong> Personal Activo</p>
                     </div>

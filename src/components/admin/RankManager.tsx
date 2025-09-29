@@ -56,7 +56,7 @@ export default function RankManager() {
     } catch (error) {
       console.error('Error fetching ranks:', error)
       console.error('Error details:', JSON.stringify(error, null, 2))
-      toast.error(`Error al cargar rangos: ${error.message || 'Error desconocido'}`)
+      toast.error(`Error al cargar rangos: ${(error as any)?.message || 'Error desconocido'}`)
     } finally {
       setLoading(false)
     }
