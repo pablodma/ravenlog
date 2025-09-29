@@ -55,9 +55,10 @@ export class DCSService {
       .from('user_statistics')
       .select('*')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
+      console.error('Error fetching user statistics:', error)
       throw error
     }
 
@@ -108,7 +109,10 @@ export class DCSService {
       .eq('user_id', user.id)
       .order('shots', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching weapon statistics:', error)
+      throw error
+    }
 
     return (weaponStats || []).map((stat: any) => ({
       weapon_name: stat.weapon_name,
@@ -131,9 +135,10 @@ export class DCSService {
       .select('id, filename, processed_at, status')
       .eq('file_hash', fileHash)
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
+      console.error('Error checking duplicate:', error)
       throw error
     }
 
