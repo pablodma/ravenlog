@@ -115,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       if (data) {
-        console.log('✅ fetchProfile: Perfil obtenido exitosamente:', data.email || 'sin email')
+        console.log('✅ fetchProfile: Perfil obtenido exitosamente:', (data as any).email || 'sin email')
         setProfile(data)
         console.log('🏁 fetchProfile: Estableciendo loading=false')
         setLoading(false)
