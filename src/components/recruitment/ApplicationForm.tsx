@@ -71,7 +71,7 @@ export default function ApplicationForm() {
 
   const checkExistingApplication = async () => {
     try {
-      const { data, error } = await (supabase as any)
+      const { data } = await (supabase as any)
         .from('applications')
         .select('*')
         .eq('applicant_id', profile?.id)
