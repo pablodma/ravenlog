@@ -43,6 +43,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state change:', event, !!session)
+        
+        // Evitar procesar el mismo evento múltiples veces
+        if (event === 'INITIAL_SESSION') {
+          return // Ya procesado en getSession()
+        }
+        
         setSession(session)
         setUser(session?.user ?? null)
         
@@ -55,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false)
         } else if (!session) {
           console.log('Sin sesión')
+          setProfile(null)
           setLoading(false)
         }
       }
@@ -79,14 +86,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('Perfil no existe, creando nuevo...')
           await createProfile(userId)
           return // createProfile maneja setLoading(false)
+        } else {
+          // Para otros errores, terminar loading
+          setLoading(false)
         }
       } else {
         console.log('Perfil obtenido exitosamente')
         setProfile(data)
+        setLoading(false)
       }
     } catch (error) {
       console.error('Error en fetchProfile:', error)
-    } finally {
       setLoading(false)
     }
   }
