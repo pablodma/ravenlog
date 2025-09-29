@@ -95,16 +95,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('💥 fetchProfile: Error crítico, terminando loading')
           setLoading(false)
         }
-      } else {
-        console.log('✅ fetchProfile: Perfil obtenido exitosamente:', data?.email || 'sin email')
+      } else if (data) {
+        console.log('✅ fetchProfile: Perfil obtenido exitosamente:', data.email || 'sin email')
         console.log('✅ fetchProfile: Datos del perfil:', {
-          id: data?.id || 'sin id',
-          email: data?.email || 'sin email',
-          role: data?.role || 'sin role',
-          full_name: data?.full_name || 'sin nombre'
+          id: data.id || 'sin id',
+          email: data.email || 'sin email',
+          role: data.role || 'sin role',
+          full_name: data.full_name || 'sin nombre'
         })
         setProfile(data)
         console.log('🏁 fetchProfile: Estableciendo loading=false')
+        setLoading(false)
+      } else {
+        console.warn('⚠️ fetchProfile: No se encontraron datos del perfil')
         setLoading(false)
       }
     } catch (error) {
