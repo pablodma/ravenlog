@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Upload, FileText, AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
 import { DCSLogParser, ParsedLogSummary } from '@/utils/dcsLogParser'
 import { formatFlightTime, calculateAccuracy } from '@/utils/dcsLogParser'
+import { DCSService } from '@/services/dcsService'
 
 interface LogUploaderProps {
   onUploadComplete?: (summary: ParsedLogSummary) => void
@@ -85,45 +86,13 @@ export default function LogUploader({ onUploadComplete, className = '' }: LogUpl
     setUploadState('uploading')
 
     try {
-      // Calcular hash del archivo para deduplicación
-      const content = await selectedFile.text()
-      const fileHash = await DCSLogParser.calculateFileHash(content)
-
-      // Verificar si ya existe
-      const duplicateCheck = await fetch('/api/dcs/check-duplicate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileHash })
-      })
-
-      if (duplicateCheck.ok) {
-        const { isDuplicate } = await duplicateCheck.json()
-        if (isDuplicate) {
-          setUploadResult({ ...uploadResult, isDuplicate: true })
-          setUploadState('success')
-          return
-        }
-      }
-
-      // Subir y procesar el archivo
-      const formData = new FormData()
-      formData.append('file', selectedFile)
-      formData.append('fileHash', fileHash)
-      formData.append('summary', JSON.stringify(uploadResult.summary))
-
-      const response = await fetch('/api/dcs/upload-log', {
-        method: 'POST',
-        body: formData
-      })
-
-      if (!response.ok) {
-        throw new Error('Error al subir el archivo')
-      }
-
-      const result = await response.json()
+      // Subir y procesar el archivo usando el servicio
+      const result = await DCSService.uploadLog(selectedFile, uploadResult.summary)
+      
+      setUploadResult({ ...uploadResult, isDuplicate: result.isDuplicate })
       setUploadState('success')
       
-      if (onUploadComplete && uploadResult.summary) {
+      if (onUploadComplete && uploadResult.summary && !result.isDuplicate) {
         onUploadComplete(uploadResult.summary)
       }
 

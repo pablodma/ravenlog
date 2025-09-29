@@ -1,27 +1,9 @@
-import React, { useState, useEffect } from 'react'
-import { Plane, Target, Trophy, Clock, TrendingUp, Upload, BarChart3 } from 'lucide-react'
-import { formatFlightTime, calculateAccuracy } from '@/utils/dcsLogParser'
+import { useState, useEffect } from 'react'
+import { Plane, Target, Clock, TrendingUp, Upload, BarChart3 } from 'lucide-react'
+import { formatFlightTime } from '@/utils/dcsLogParser'
 import { useAuth } from '@/contexts/AuthContext'
+import { DCSService, UserStatistics, WeaponStatistic } from '@/services/dcsService'
 
-interface UserStatistics {
-  total_missions: number
-  total_takeoffs: number
-  total_landings: number
-  total_flight_time: string // PostgreSQL interval as string
-  total_shots: number
-  total_hits: number
-  total_kills: number
-  total_deaths: number
-  overall_accuracy: number
-  kd_ratio: number
-}
-
-interface WeaponStatistic {
-  weapon_name: string
-  shots: number
-  hits: number
-  accuracy: number
-}
 
 interface FlightStatisticsProps {
   onUploadClick?: () => void
@@ -47,19 +29,11 @@ export default function FlightStatistics({ onUploadClick, className = '' }: Flig
       setError(null)
 
       // Obtener estadísticas generales
-      const statsResponse = await fetch('/api/dcs/statistics')
-      if (!statsResponse.ok) {
-        throw new Error('Error al cargar estadísticas')
-      }
-      const statsData = await statsResponse.json()
+      const statsData = await DCSService.getUserStatistics()
       setStatistics(statsData)
 
       // Obtener estadísticas por arma
-      const weaponsResponse = await fetch('/api/dcs/weapon-statistics')
-      if (!weaponsResponse.ok) {
-        throw new Error('Error al cargar estadísticas de armas')
-      }
-      const weaponsData = await weaponsResponse.json()
+      const weaponsData = await DCSService.getWeaponStatistics()
       setWeaponStats(weaponsData)
 
     } catch (error) {

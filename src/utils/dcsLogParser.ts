@@ -36,27 +36,17 @@ export class DCSLogParser {
     this.errors = [];
 
     const lines = content.split('\n');
-    let currentMission: string | null = null;
-    let missionStartTime: Date | null = null;
-    let playerSpawned = false;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
 
       try {
-        const event = this.parseLine(line, i + 1);
+        const event = this.parseLine(line);
         if (event) {
           this.events.push(event);
 
           // Trackear estado de misión
-          if (event.type === 'mission_start') {
-            currentMission = event.data.missionName || 'Unknown Mission';
-            missionStartTime = event.timestamp;
-            playerSpawned = false;
-          } else if (event.type === 'spawn') {
-            playerSpawned = true;
-          }
         }
       } catch (error) {
         this.errors.push(`Línea ${i + 1}: ${error instanceof Error ? error.message : 'Error desconocido'}`);
@@ -69,7 +59,7 @@ export class DCSLogParser {
   /**
    * Parsea una línea individual del log
    */
-  private parseLine(line: string, lineNumber: number): DCSEvent | null {
+  private parseLine(line: string): DCSEvent | null {
     // Extraer timestamp del formato: 2025-09-22 00:23:25.433
     const timestampMatch = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})/);
     if (!timestampMatch) {

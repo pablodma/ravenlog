@@ -1,24 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { FileText, CheckCircle, AlertCircle, XCircle, Clock, Eye, Trash2 } from 'lucide-react'
 import { formatFlightTime } from '@/utils/dcsLogParser'
+import { DCSService, LogFile } from '@/services/dcsService'
 
-interface LogFile {
-  id: string
-  filename: string
-  file_size: number
-  processed_at: string
-  events_count: number
-  status: 'processing' | 'processed' | 'error' | 'duplicate'
-  error_message?: string
-  summary?: {
-    missions: number
-    takeoffs: number
-    landings: number
-    shots: number
-    hits: number
-    flight_time: number
-  }
-}
 
 interface LogHistoryProps {
   onViewDetails?: (logFile: LogFile) => void
@@ -39,12 +23,7 @@ export default function LogHistory({ onViewDetails, className = '' }: LogHistory
       setLoading(true)
       setError(null)
 
-      const response = await fetch('/api/dcs/log-history')
-      if (!response.ok) {
-        throw new Error('Error al cargar historial de logs')
-      }
-
-      const data = await response.json()
+      const data = await DCSService.getLogHistory()
       setLogFiles(data)
     } catch (error) {
       console.error('Error fetching log history:', error)
@@ -60,14 +39,8 @@ export default function LogHistory({ onViewDetails, className = '' }: LogHistory
     }
 
     try {
-      const response = await fetch(`/api/dcs/log-files/${logId}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) {
-        throw new Error('Error al eliminar archivo')
-      }
-
+      await DCSService.deleteLogFile(logId)
+      
       // Actualizar la lista
       setLogFiles(prev => prev.filter(file => file.id !== logId))
     } catch (error) {

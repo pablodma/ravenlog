@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Plane, Upload, History, BarChart3 } from 'lucide-react'
 import FlightStatistics from '@/components/dcs/FlightStatistics'
 import LogUploader from '@/components/dcs/LogUploader'
