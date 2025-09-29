@@ -112,8 +112,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await createProfile(userId)
           return
         }
-      } else if (data) {
-        console.log('✅ fetchProfile: Perfil obtenido exitosamente:', data.email)
+      }
+      
+      if (data) {
+        console.log('✅ fetchProfile: Perfil obtenido exitosamente:', data.email || 'sin email')
         setProfile(data)
         console.log('🏁 fetchProfile: Estableciendo loading=false')
         setLoading(false)
