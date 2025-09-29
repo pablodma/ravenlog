@@ -8,6 +8,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Configuración de salida para Vercel
+  output: 'standalone',
   // Configuración para Supabase
   async headers() {
     return [
