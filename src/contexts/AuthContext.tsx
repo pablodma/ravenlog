@@ -184,26 +184,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
+      console.log('🚀 signInWithGoogle: Iniciando login con Google')
+      
       // Detectar si estamos en desarrollo o producción
       const isProduction = window.location.hostname !== 'localhost'
       const redirectTo = isProduction 
         ? 'https://ravenlog-dcs.vercel.app/' 
         : 'http://localhost:3000/'
 
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('🔗 signInWithGoogle: redirectTo =', redirectTo)
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo
         }
       })
       
+      console.log('📊 signInWithGoogle: Respuesta de Supabase:', { data, error })
+      
       if (error) {
-        toast.error('Error al iniciar sesión con Google')
-        console.error('Error:', error)
+        console.error('❌ signInWithGoogle: Error:', error)
+        toast.error('Error al iniciar sesión con Google: ' + error.message)
+      } else {
+        console.log('✅ signInWithGoogle: Login iniciado correctamente')
+        toast.success('Redirigiendo a Google...')
       }
     } catch (error) {
+      console.error('💥 signInWithGoogle: Error crítico:', error)
       toast.error('Error al iniciar sesión')
-      console.error('Error:', error)
     }
   }
 
