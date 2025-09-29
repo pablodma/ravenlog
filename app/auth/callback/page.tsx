@@ -31,9 +31,47 @@ export default function AuthCallbackPage() {
         if (code) {
           console.log('🔑 AuthCallback: Procesando código OAuth:', code)
           
-          // Intercambiar código por sesión
+          // Intercambiar código por sesión usando el cliente actual
+          console.log('🔄 AuthCallback: Intentando exchangeCodeForSession...')
           const { data, error } = await supabase.auth.exchangeCodeForSession(code)
           console.log('🔄 AuthCallback: exchangeCodeForSession result:', { data, error })
+          
+          if (error) {
+            console.error('❌ AuthCallback: Error en exchangeCodeForSession:', error.message)
+            console.error('❌ AuthCallback: Error code:', error.status)
+            
+            // Intentar método alternativo - usar la URL completa
+            try {
+              console.log('🔄 AuthCallback: Intentando método alternativo...')
+              const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=pkce`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                },
+                body: new URLSearchParams({
+                  code: code,
+                  code_verifier: localStorage.getItem('sb-sjajpvjypxkiarsurtqz-auth-token-code-verifier') || '',
+                })
+              })
+              
+              const result = await response.json()
+              console.log('🔄 AuthCallback: Método alternativo result:', result)
+              
+              if (result.access_token) {
+                console.log('✅ AuthCallback: Token obtenido con método alternativo')
+                // Establecer la sesión manualmente
+                await supabase.auth.setSession({
+                  access_token: result.access_token,
+                  refresh_token: result.refresh_token
+                })
+                router.push('/dashboard')
+                return
+              }
+            } catch (altError) {
+              console.error('❌ AuthCallback: Error en método alternativo:', altError)
+            }
+          }
           
           if (data.session) {
             console.log('✅ AuthCallback: Sesión establecida con código')
