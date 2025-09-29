@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 
+// Hook para gestionar permisos RBAC
 export function usePermissions() {
   const { profile } = useAuth()
   const [permissions, setPermissions] = useState<string[]>([])
