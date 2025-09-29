@@ -1,6 +1,6 @@
 
 import { useAuth } from '@/contexts/AuthContext'
-import { Users, Award, Medal, UserPlus, Activity, Calendar } from 'lucide-react'
+import { UserPlus, Activity, Calendar, Award } from 'lucide-react'
 
 export default function DashboardPage() {
   const { profile } = useAuth()

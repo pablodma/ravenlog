@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { User, Award, Medal, BarChart3, Calendar, MapPin, Mail, Phone, Edit } from 'lucide-react'
+import { User, Award, Medal, BarChart3, Calendar, MapPin, Mail, Edit } from 'lucide-react'
 import FlightStatistics from '@/components/dcs/FlightStatistics'
 
 export default function ProfilePage() {

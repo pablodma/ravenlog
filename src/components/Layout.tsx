@@ -4,8 +4,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import {
   Home,
   Users,
-  Award,
-  Medal,
   UserPlus,
   Settings,
   LogOut,
