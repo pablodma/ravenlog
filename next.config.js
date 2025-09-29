@@ -10,6 +10,14 @@ const nextConfig = {
   },
   // Excluir páginas de React Router del build
   pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
+  // Excluir completamente la carpeta src/pages
+  webpack: (config, { isServer }) => {
+    config.module.rules.push({
+      test: /src\/pages\/.*\.(tsx|ts|jsx|js)$/,
+      use: 'ignore-loader',
+    })
+    return config
+  },
   // Configuración para Supabase
   async headers() {
     return [
