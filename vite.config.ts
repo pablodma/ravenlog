@@ -13,11 +13,13 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    // Simplificar build para Vercel
+    // Configuración mínima para Vercel
+    minify: 'esbuild',
     rollupOptions: {
       output: {
-        // Remover manual chunks - usar build estándar
-        manualChunks: undefined
+        entryFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name].[ext]'
       }
     }
   },
