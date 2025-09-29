@@ -20,6 +20,29 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    // Limpiar sesiones corruptas
+    flowType: 'pkce'
   }
 })
+
+// Limpiar sesiones corruptas al inicializar
+if (typeof window !== 'undefined') {
+  // Limpiar localStorage de sesiones corruptas
+  const keys = Object.keys(localStorage)
+  keys.forEach(key => {
+    if (key.includes('supabase') || key.includes('sb-')) {
+      console.log('🧹 Limpiando sesión corrupta:', key)
+      localStorage.removeItem(key)
+    }
+  })
+  
+  // Limpiar sessionStorage también
+  const sessionKeys = Object.keys(sessionStorage)
+  sessionKeys.forEach(key => {
+    if (key.includes('supabase') || key.includes('sb-')) {
+      console.log('🧹 Limpiando sessionStorage corrupto:', key)
+      sessionStorage.removeItem(key)
+    }
+  })
+}
