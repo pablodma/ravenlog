@@ -376,9 +376,26 @@ export default function FormBuilder() {
                             options: e.target.value.split('\n').filter(opt => opt.trim() !== '') 
                           })}
                           onKeyDown={(e) => {
-                            // Permitir Enter en el textarea
+                            // Permitir Enter en el textarea y prevenir envío del formulario
                             if (e.key === 'Enter') {
                               e.stopPropagation();
+                              e.preventDefault();
+                              // Insertar manualmente el salto de línea
+                              const target = e.target as HTMLTextAreaElement;
+                              const start = target.selectionStart;
+                              const end = target.selectionEnd;
+                              const value = target.value;
+                              const newValue = value.substring(0, start) + '\n' + value.substring(end);
+                              
+                              updateField(index, { 
+                                ...field, 
+                                options: newValue.split('\n').filter(opt => opt.trim() !== '') 
+                              });
+                              
+                              // Restaurar posición del cursor
+                              setTimeout(() => {
+                                target.selectionStart = target.selectionEnd = start + 1;
+                              }, 0);
                             }
                           }}
                           placeholder="Opción 1&#10;Opción 2&#10;Opción 3"
@@ -468,7 +485,7 @@ export default function FormBuilder() {
         ))}
       </div>
 
-      {forms.length === 0 && (
+      {forms.length === 0 && !showForm && (
         <div className="text-center py-12">
           <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-500 mb-4">No hay formularios creados aún</p>
