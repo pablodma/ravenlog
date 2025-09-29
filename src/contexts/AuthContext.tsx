@@ -23,13 +23,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    console.log('AuthProvider useEffect iniciado')
+    
     // Obtener sesión inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Sesión inicial obtenida:', !!session)
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
+        console.log('Usuario encontrado, obteniendo perfil...')
         fetchProfile(session.user.id)
       } else {
+        console.log('No hay usuario, terminando loading')
         setLoading(false)
       }
     })
@@ -37,13 +42,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, !!session)
         setSession(session)
         setUser(session?.user ?? null)
         
         if (event === 'SIGNED_IN' && session?.user) {
+          console.log('Usuario logueado, obteniendo perfil...')
           await fetchProfile(session.user.id)
         } else if (event === 'SIGNED_OUT') {
+          console.log('Usuario deslogueado')
           setProfile(null)
+          setLoading(false)
+        } else if (!session) {
+          console.log('Sin sesión')
           setLoading(false)
         }
       }
@@ -54,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('Obteniendo perfil para usuario:', userId)
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -64,10 +76,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Error fetching profile:', error)
         // Si no existe perfil, crear uno
         if (error.code === 'PGRST116') {
+          console.log('Perfil no existe, creando nuevo...')
           await createProfile(userId)
-          return
+          return // createProfile maneja setLoading(false)
         }
       } else {
+        console.log('Perfil obtenido exitosamente')
         setProfile(data)
       }
     } catch (error) {
@@ -79,8 +93,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const createProfile = async (userId: string) => {
     try {
+      console.log('Creando perfil para usuario:', userId)
       const user = await supabase.auth.getUser()
-      if (!user.data.user) return
+      if (!user.data.user) {
+        console.error('No hay usuario para crear perfil')
+        setLoading(false)
+        return
+      }
 
       const profileData = {
         id: userId,
@@ -89,6 +108,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         avatar_url: user.data.user.user_metadata?.avatar_url || null,
         role: 'candidate' as const
       }
+
+      console.log('Datos del perfil a crear:', profileData)
 
       const { data, error } = await (supabase as any)
         .from('profiles')
@@ -99,13 +120,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.error('Error creating profile:', error)
         toast.error('Error al crear el perfil')
+        // Aun con error, terminar loading
       } else {
+        console.log('Perfil creado exitosamente:', data)
         setProfile(data)
-        toast.success('Perfil creado exitosamente')
+        toast.success('¡Bienvenido a RavenLog! Perfil creado exitosamente')
       }
     } catch (error) {
       console.error('Error en createProfile:', error)
+      toast.error('Error inesperado al crear perfil')
     } finally {
+      console.log('CreateProfile terminado, setLoading(false)')
       setLoading(false)
     }
   }

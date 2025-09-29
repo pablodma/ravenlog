@@ -30,9 +30,18 @@ function ProtectedRoute({ children, adminOnly = false }: { children: React.React
 }
 
 function App() {
-  const { profile, loading } = useAuth()
+  const { profile, loading, user } = useAuth()
+
+  // Debug logging to console
+  console.log('App render:', { profile: !!profile, loading, user: !!user })
 
   if (loading) {
+    return <LoadingSpinner />
+  }
+
+  // Si no hay profile pero hay user, mostrar loading (perfil en creación)
+  if (user && !profile) {
+    console.log('User exists but no profile, showing loading...')
     return <LoadingSpinner />
   }
 
@@ -40,6 +49,7 @@ function App() {
     <Routes>
       <Route path="/login" element={!profile ? <LoginPage /> : <Navigate to="/dashboard" replace />} />
       
+      {/* Rutas protegidas */}
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
@@ -50,7 +60,8 @@ function App() {
         <Route path="admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* Fallback - redirigir según estado de auth */}
+      <Route path="*" element={profile ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
     </Routes>
   )
 }
