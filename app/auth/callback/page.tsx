@@ -23,7 +23,33 @@ export default function AuthCallbackPage() {
     const checkSession = async () => {
       console.log('⏳ AuthCallback: Esperando sesión de Supabase...')
       
-      // Intentar procesar la sesión desde la URL
+      // Procesar el código OAuth manualmente
+      try {
+        const urlParams = new URLSearchParams(window.location.search)
+        const code = urlParams.get('code')
+        
+        if (code) {
+          console.log('🔑 AuthCallback: Procesando código OAuth:', code)
+          
+          // Intercambiar código por sesión
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+          console.log('🔄 AuthCallback: exchangeCodeForSession result:', { data, error })
+          
+          if (data.session) {
+            console.log('✅ AuthCallback: Sesión establecida con código')
+            router.push('/dashboard')
+            return
+          } else if (error) {
+            console.error('❌ AuthCallback: Error intercambiando código:', error)
+          }
+        } else {
+          console.log('⚠️ AuthCallback: No hay código en la URL')
+        }
+      } catch (error) {
+        console.error('❌ AuthCallback: Error procesando código:', error)
+      }
+      
+      // Intentar obtener sesión existente
       try {
         const { data, error } = await supabase.auth.getSession()
         console.log('🔍 AuthCallback: getSession result:', { data, error })
