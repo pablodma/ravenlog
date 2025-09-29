@@ -6,19 +6,17 @@ import toast from 'react-hot-toast'
 interface Rank {
   id: string
   name: string
-  title: string
-  description: string
+  abbreviation: string
+  order: number
   image_url: string | null
-  order_index: number
   created_at: string
 }
 
 interface RankForm {
   name: string
-  title: string
-  description: string
+  abbreviation: string
+  order: number
   image_url: string
-  order_index: number
 }
 
 export default function RankManager() {
@@ -29,10 +27,9 @@ export default function RankManager() {
   const [uploading, setUploading] = useState(false)
   const [form, setForm] = useState<RankForm>({
     name: '',
-    title: '',
-    description: '',
-    image_url: '',
-    order_index: 1
+    abbreviation: '',
+    order: 1,
+    image_url: ''
   })
 
   useEffect(() => {
@@ -45,7 +42,7 @@ export default function RankManager() {
       const { data, error } = await (supabase as any)
         .from('ranks')
         .select('*')
-        .order('order_index')
+        .order('order')
 
       console.log('Ranks response:', { data, error })
       
@@ -133,10 +130,9 @@ export default function RankManager() {
     setEditingRank(rank)
     setForm({
       name: rank.name,
-      title: rank.title,
-      description: rank.description,
-      image_url: rank.image_url || '',
-      order_index: rank.order_index
+      abbreviation: rank.abbreviation,
+      order: rank.order,
+      image_url: rank.image_url || ''
     })
     setShowForm(true)
   }
@@ -160,7 +156,7 @@ export default function RankManager() {
   }
 
   const resetForm = () => {
-    setForm({ name: '', title: '', description: '', image_url: '', order_index: ranks.length + 1 })
+    setForm({ name: '', abbreviation: '', order: ranks.length + 1, image_url: '' })
     setEditingRank(null)
     setShowForm(false)
   }
@@ -217,12 +213,13 @@ export default function RankManager() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Título
+                  Abreviación
                 </label>
                 <input
                   type="text"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  value={form.abbreviation}
+                  onChange={(e) => setForm({ ...form, abbreviation: e.target.value })}
+                  placeholder="ej: CDT, TTE, CAP"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
@@ -231,25 +228,12 @@ export default function RankManager() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción
-              </label>
-              <textarea
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Orden
               </label>
               <input
                 type="number"
-                value={form.order_index}
-                onChange={(e) => setForm({ ...form, order_index: parseInt(e.target.value) })}
+                value={form.order}
+                onChange={(e) => setForm({ ...form, order: parseInt(e.target.value) })}
                 min="1"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
@@ -311,11 +295,10 @@ export default function RankManager() {
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-gray-900">{rank.title}</h3>
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">#{rank.order_index}</span>
+                <h3 className="font-semibold text-gray-900">{rank.name}</h3>
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-mono">{rank.abbreviation}</span>
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">#{rank.order}</span>
               </div>
-              <p className="text-sm text-gray-600">{rank.name}</p>
-              <p className="text-sm text-gray-500 mt-1">{rank.description}</p>
             </div>
             <div className="flex items-center gap-2">
               <button

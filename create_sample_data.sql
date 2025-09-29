@@ -19,16 +19,16 @@ SELECT EXISTS (
 ) as units_exists;
 
 -- 2. Crear rangos de ejemplo (solo si no existen)
-INSERT INTO public.ranks (name, title, description, order_index) 
+INSERT INTO public.ranks (name, abbreviation, "order") 
 VALUES 
-  ('cadet', 'Cadete', 'Rango inicial para nuevos reclutas', 1),
-  ('airman', 'Aviador', 'Rango básico de aviador', 2),
-  ('corporal', 'Cabo', 'Rango de suboficial junior', 3),
-  ('sergeant', 'Sargento', 'Rango de suboficial', 4),
-  ('lieutenant', 'Teniente', 'Rango de oficial junior', 5),
-  ('captain', 'Capitán', 'Rango de oficial', 6),
-  ('major', 'Mayor', 'Rango de oficial senior', 7),
-  ('colonel', 'Coronel', 'Rango de oficial superior', 8)
+  ('Cadete', 'CDT', 1),
+  ('Subteniente', 'STE', 2),
+  ('Teniente', 'TTE', 3),
+  ('Capitán', 'CAP', 4),
+  ('Mayor', 'MAY', 5),
+  ('Teniente Coronel', 'TCL', 6),
+  ('Coronel', 'COL', 7),
+  ('General', 'GRL', 8)
 ON CONFLICT (name) DO NOTHING;
 
 -- 3. Crear unidades de ejemplo (solo si no existen)
@@ -43,7 +43,7 @@ ON CONFLICT (name) DO NOTHING;
 
 -- 4. Verificar datos creados
 SELECT 'Rangos creados:' as info;
-SELECT name, title, order_index FROM public.ranks ORDER BY order_index;
+SELECT name, abbreviation, "order" FROM public.ranks ORDER BY "order";
 
 SELECT 'Unidades creadas:' as info;
 SELECT name, unit_type, callsign, max_personnel FROM public.units ORDER BY name;

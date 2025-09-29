@@ -20,9 +20,9 @@ interface Application {
 interface Rank {
   id: string
   name: string
-  title: string
+  abbreviation: string
+  order: number
   image_url: string | null
-  order_index: number
 }
 
 interface Unit {
@@ -66,7 +66,7 @@ export default function CandidateProcessor() {
         (supabase as any)
           .from('ranks')
           .select('*')
-          .order('order_index'),
+          .order('order'),
         
         (supabase as any)
           .from('units')
@@ -271,8 +271,8 @@ export default function CandidateProcessor() {
                           </div>
                         )}
                         <div>
-                          <p className="font-medium text-gray-900">{rank.title}</p>
-                          <p className="text-sm text-gray-600">{rank.name}</p>
+                          <p className="font-medium text-gray-900">{rank.name}</p>
+                          <p className="text-sm text-gray-600">{rank.abbreviation}</p>
                         </div>
                       </label>
                     ))}
