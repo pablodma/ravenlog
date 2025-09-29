@@ -75,11 +75,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🔍 fetchProfile: Iniciando para usuario:', userId)
       console.log('🔍 fetchProfile: Estado actual - loading:', loading, 'profile:', !!profile)
       
-      // Timeout de seguridad para evitar loading infinito
+      // Timeout de seguridad más corto para evitar loading infinito
       const timeoutId = setTimeout(() => {
-        console.error('⏰ fetchProfile: Timeout - forzando loading=false')
+        console.error('⏰ fetchProfile: TIMEOUT después de 5 segundos - forzando loading=false')
+        console.error('⏰ fetchProfile: Esto indica un problema con Supabase RLS o conectividad')
         setLoading(false)
-      }, 10000) // 10 segundos
+        toast.error('Error de conexión. Intenta recargar la página.')
+      }, 5000) // 5 segundos más agresivo
+      
+      console.log('🔄 fetchProfile: Ejecutando consulta a Supabase...')
+      const startTime = Date.now()
       
       const { data, error } = await supabase
         .from('profiles')
@@ -87,6 +92,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .single()
       
+      const endTime = Date.now()
+      console.log(`⏱️ fetchProfile: Consulta completada en ${endTime - startTime}ms`)
       clearTimeout(timeoutId) // Cancelar timeout si la consulta termina
 
       if (error) {
@@ -100,17 +107,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await createProfile(userId)
           return // createProfile maneja setLoading(false)
         } else {
-          console.error('💥 fetchProfile: Error crítico, terminando loading')
-          setLoading(false)
+          console.error('💥 fetchProfile: Error crítico, intentando crear perfil como fallback')
+          // Intentar crear perfil como último recurso
+          await createProfile(userId)
+          return
         }
       } else if (data) {
-        console.log('✅ fetchProfile: Perfil obtenido exitosamente')
+        console.log('✅ fetchProfile: Perfil obtenido exitosamente:', data.email)
         setProfile(data)
         console.log('🏁 fetchProfile: Estableciendo loading=false')
         setLoading(false)
       } else {
-        console.warn('⚠️ fetchProfile: No se encontraron datos del perfil')
-        setLoading(false)
+        console.warn('⚠️ fetchProfile: No se encontraron datos del perfil, creando nuevo')
+        await createProfile(userId)
+        return
       }
     } catch (error) {
       console.error('💥 fetchProfile: Error crítico en catch:', error)
@@ -120,10 +130,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const createProfile = async (userId: string) => {
     try {
-      console.log('Creando perfil para usuario:', userId)
+      console.log('🆕 createProfile: Iniciando creación para usuario:', userId)
+      
+      // Timeout para createProfile también
+      const timeoutId = setTimeout(() => {
+        console.error('⏰ createProfile: TIMEOUT después de 5 segundos')
+        setLoading(false)
+        toast.error('Error de conexión al crear perfil. Intenta recargar.')
+      }, 5000)
+      
       const user = await supabase.auth.getUser()
       if (!user.data.user) {
-        console.error('No hay usuario para crear perfil')
+        console.error('❌ createProfile: No hay usuario para crear perfil')
+        clearTimeout(timeoutId)
         setLoading(false)
         return
       }
@@ -136,7 +155,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: 'candidate' as const
       }
 
-      console.log('Datos del perfil a crear:', profileData)
+      console.log('📝 createProfile: Datos del perfil a crear:', profileData)
+      const startTime = Date.now()
 
       const { data, error } = await (supabase as any)
         .from('profiles')
@@ -144,12 +164,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select()
         .single()
 
+      const endTime = Date.now()
+      console.log(`⏱️ createProfile: Inserción completada en ${endTime - startTime}ms`)
+      clearTimeout(timeoutId)
+
       if (error) {
-        console.error('Error creating profile:', error)
-        toast.error('Error al crear el perfil')
+        console.error('❌ createProfile: Error en inserción:', error)
+        toast.error('Error al crear el perfil: ' + error.message)
         // Aun con error, terminar loading
       } else {
-        console.log('Perfil creado exitosamente:', data)
+        console.log('✅ createProfile: Perfil creado exitosamente:', data.email)
         setProfile(data)
         toast.success('¡Bienvenido a RavenLog! Perfil creado exitosamente')
       }
