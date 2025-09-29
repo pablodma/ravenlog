@@ -31,28 +31,57 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
 
   const loadData = async () => {
     try {
+      console.log('📅 CalendarView.loadData: Iniciando carga de datos');
       setLoading(true);
       setError(null);
 
       // Calcular rango de fechas basado en la vista actual
       const startDate = getViewStartDate();
       const endDate = getViewEndDate();
+      
+      console.log('📅 CalendarView.loadData: Rango de fechas:', {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        viewMode,
+        currentDate
+      });
 
-      const [eventsData, eventTypesData] = await Promise.all([
-        CalendarService.getEvents({
+      console.log('📅 CalendarView.loadData: Filtros aplicados:', selectedFilters);
+
+      try {
+        console.log('📅 CalendarView.loadData: Cargando tipos de eventos...');
+        const eventTypesData = await CalendarService.getEventTypes();
+        console.log('📅 CalendarView.loadData: Tipos de eventos cargados:', eventTypesData.length);
+        setEventTypes(eventTypesData);
+
+        console.log('📅 CalendarView.loadData: Cargando eventos...');
+        const eventsData = await CalendarService.getEvents({
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
           status: selectedFilters.status,
-        }),
-        CalendarService.getEventTypes(),
-      ]);
+        });
+        console.log('📅 CalendarView.loadData: Eventos cargados:', eventsData.length);
+        setEvents(eventsData);
 
-      setEvents(eventsData);
-      setEventTypes(eventTypesData);
-    } catch (err) {
-      console.error('Error loading calendar data:', err);
-      setError('Error al cargar los eventos del calendario');
+        console.log('✅ CalendarView.loadData: Carga completada exitosamente');
+      } catch (serviceError) {
+        console.error('❌ CalendarView.loadData: Error en servicio:', serviceError);
+        throw serviceError;
+      }
+    } catch (err: any) {
+      console.error('💥 CalendarView.loadData: Error crítico:', err);
+      console.error('💥 CalendarView.loadData: Error stack:', err.stack);
+      
+      let errorMessage = 'Error al cargar los eventos del calendario';
+      if (err.message?.includes('Calendar table not accessible')) {
+        errorMessage = 'Las tablas del calendario no están disponibles. Contacta al administrador.';
+      } else if (err.message?.includes('permission denied')) {
+        errorMessage = 'No tienes permisos para acceder al calendario.';
+      }
+      
+      setError(errorMessage);
     } finally {
+      console.log('🏁 CalendarView.loadData: Finalizando, estableciendo loading=false');
       setLoading(false);
     }
   };

@@ -72,7 +72,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
-      console.log('Obteniendo perfil para usuario:', userId)
+      console.log('🔍 fetchProfile: Iniciando para usuario:', userId)
+      console.log('🔍 fetchProfile: Estado actual - loading:', loading, 'profile:', !!profile)
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -80,23 +82,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       if (error) {
-        console.error('Error fetching profile:', error)
+        console.error('❌ fetchProfile: Error en consulta:', error)
+        console.error('❌ fetchProfile: Error code:', error.code)
+        console.error('❌ fetchProfile: Error message:', error.message)
+        
         // Si no existe perfil, crear uno
         if (error.code === 'PGRST116') {
-          console.log('Perfil no existe, creando nuevo...')
+          console.log('🆕 fetchProfile: Perfil no existe, creando nuevo...')
           await createProfile(userId)
           return // createProfile maneja setLoading(false)
         } else {
-          // Para otros errores, terminar loading
+          console.error('💥 fetchProfile: Error crítico, terminando loading')
           setLoading(false)
         }
       } else {
-        console.log('Perfil obtenido exitosamente')
+        console.log('✅ fetchProfile: Perfil obtenido exitosamente:', data.email)
+        console.log('✅ fetchProfile: Datos del perfil:', {
+          id: data.id,
+          email: data.email,
+          role: data.role,
+          full_name: data.full_name
+        })
         setProfile(data)
+        console.log('🏁 fetchProfile: Estableciendo loading=false')
         setLoading(false)
       }
     } catch (error) {
-      console.error('Error en fetchProfile:', error)
+      console.error('💥 fetchProfile: Error crítico en catch:', error)
       setLoading(false)
     }
   }

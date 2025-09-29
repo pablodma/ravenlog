@@ -156,34 +156,98 @@ export class CalendarService {
     status?: string;
     organizer_id?: string;
   }): Promise<FlightEvent[]> {
-    let query = (supabase as any)
-      .from('flight_events_calendar')
-      .select(`
-        *,
-        event_type:event_types(*),
-        organizer:profiles!organizer_id(id, full_name, email),
-        participant_count:event_participants(count)
-      `);
+    try {
+      console.log('CalendarService.getEvents called with filters:', filters);
+      
+      // Primero verificar si las tablas existen
+      const { data: tableCheck, error: tableError } = await (supabase as any)
+        .from('flight_events_calendar')
+        .select('id')
+        .limit(1);
+      
+      if (tableError) {
+        console.error('Calendar table check failed:', tableError);
+        throw new Error(`Calendar table not accessible: ${tableError.message}`);
+      }
 
-    if (filters?.start_date) {
-      query = query.gte('start_date', filters.start_date);
-    }
-    if (filters?.end_date) {
-      query = query.lte('start_date', filters.end_date);
-    }
-    if (filters?.status) {
-      query = query.eq('status', filters.status);
-    }
-    if (filters?.organizer_id) {
-      query = query.eq('organizer_id', filters.organizer_id);
-    }
+      // Consulta simplificada para evitar errores de JOIN
+      let query = (supabase as any)
+        .from('flight_events_calendar')
+        .select('*');
 
-    query = query.order('start_date');
+      if (filters?.start_date) {
+        query = query.gte('start_date', filters.start_date);
+      }
+      if (filters?.end_date) {
+        query = query.lte('start_date', filters.end_date);
+      }
+      if (filters?.status) {
+        query = query.eq('status', filters.status);
+      }
+      if (filters?.organizer_id) {
+        query = query.eq('organizer_id', filters.organizer_id);
+      }
 
-    const { data, error } = await query;
+      query = query.order('start_date');
 
-    if (error) throw error;
-    return data || [];
+      console.log('Executing calendar query...');
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Calendar query error:', error);
+        throw error;
+      }
+
+      console.log('Calendar query successful, found events:', data?.length || 0);
+
+      // Si hay eventos, intentar cargar datos relacionados por separado
+      if (data && data.length > 0) {
+        const eventsWithDetails = await Promise.all(
+          data.map(async (event: any) => {
+            try {
+              // Cargar tipo de evento
+              if (event.event_type_id) {
+                const { data: eventType } = await (supabase as any)
+                  .from('event_types')
+                  .select('*')
+                  .eq('id', event.event_type_id)
+                  .single();
+                event.event_type = eventType;
+              }
+
+              // Cargar organizador
+              if (event.organizer_id) {
+                const { data: organizer } = await (supabase as any)
+                  .from('profiles')
+                  .select('id, full_name, email')
+                  .eq('id', event.organizer_id)
+                  .single();
+                event.organizer = organizer;
+              }
+
+              // Contar participantes
+              const { count } = await (supabase as any)
+                .from('event_participants')
+                .select('*', { count: 'exact', head: true })
+                .eq('event_id', event.id);
+              event.participant_count = count || 0;
+
+              return event;
+            } catch (detailError) {
+              console.warn('Error loading event details for event:', event.id, detailError);
+              return event; // Devolver evento sin detalles si hay error
+            }
+          })
+        );
+        
+        return eventsWithDetails;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('CalendarService.getEvents error:', error);
+      throw error;
+    }
   }
 
   static async getEvent(id: string): Promise<FlightEvent> {

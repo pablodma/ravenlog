@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import Layout from '@/components/Layout'
 import LoginPage from '@/pages/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
@@ -47,26 +48,28 @@ function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/login" element={!profile ? <LoginPage /> : <Navigate to="/dashboard" replace />} />
-      
-      {/* Rutas protegidas */}
-      <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="enrollment" element={<EnrollmentPage />} />
-        <Route path="personnel" element={<PersonnelPage />} />
-        <Route path="calendar" element={<CalendarPage />} />
-        <Route path="dcs" element={<DCSPage />} />
-        <Route path="profile" element={<ProfilePage />} />
-        <Route path="admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
-      </Route>
-      
-      
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/login" element={!profile ? <LoginPage /> : <Navigate to="/dashboard" replace />} />
+        
+        {/* Rutas protegidas */}
+        <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="enrollment" element={<EnrollmentPage />} />
+          <Route path="personnel" element={<PersonnelPage />} />
+          <Route path="calendar" element={<CalendarPage />} />
+          <Route path="dcs" element={<DCSPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
+        </Route>
+        
+        
 
-      {/* Fallback - redirigir según estado de auth */}
-      <Route path="*" element={profile ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
-    </Routes>
+        {/* Fallback - redirigir según estado de auth */}
+        <Route path="*" element={profile ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
+      </Routes>
+    </ErrorBoundary>
   )
 }
 
