@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Calendar, Clock, Users, MapPin, Headphones, Plane, FileText } from 'lucide-react';
+import { X, Calendar, Clock, Users, MapPin, Plane, FileText } from 'lucide-react';
 import { CalendarService, CreateEventData, EventType } from '../../services/calendarService';
 
 interface CreateEventModalProps {

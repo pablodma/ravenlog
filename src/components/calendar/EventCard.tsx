@@ -16,7 +16,7 @@ import {
 import { FlightEvent, CalendarService } from '../../services/calendarService';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useAuth } from '../../contexts/AuthContext';
-import { PermissionGuard } from '../auth/PermissionGuard';
+import PermissionGuard from '../auth/PermissionGuard';
 
 interface EventCardProps {
   event: FlightEvent;
@@ -288,7 +288,7 @@ export function EventCard({ event, onUpdate, compact = false }: EventCardProps) 
                 ) : (
                   <button
                     onClick={handleJoinEvent}
-                    disabled={loading || (event.max_participants && (event.participants?.length || 0) >= event.max_participants)}
+                    disabled={loading || (event.max_participants ? (event.participants?.length || 0) >= event.max_participants : false)}
                     className="flex items-center gap-2 px-3 py-1 text-sm text-blue-600 border border-blue-300 rounded-md hover:bg-blue-50 disabled:opacity-50"
                   >
                     <UserPlus className="h-4 w-4" />

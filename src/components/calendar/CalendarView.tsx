@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, Plus, Filter } from 'lucide-react';
 import { CalendarService, FlightEvent, EventType } from '../../services/calendarService';
 import { usePermissions } from '../../hooks/usePermissions';
-import { PermissionGuard } from '../auth/PermissionGuard';
+import PermissionGuard from '../auth/PermissionGuard';
 import { EventCard } from './EventCard';
 import { CreateEventModal } from './CreateEventModal';
 
@@ -23,7 +23,7 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
     eventType?: string;
   }>({});
 
-  const { hasPermission } = usePermissions();
+  // const { hasPermission } = usePermissions();
 
   useEffect(() => {
     loadData();

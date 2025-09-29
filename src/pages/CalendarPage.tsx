@@ -1,5 +1,5 @@
 import { CalendarView } from '../components/calendar/CalendarView';
-import { PermissionGuard } from '../components/auth/PermissionGuard';
+import PermissionGuard from '../components/auth/PermissionGuard';
 
 export function CalendarPage() {
   return (
