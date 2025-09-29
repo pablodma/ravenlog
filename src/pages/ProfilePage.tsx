@@ -1,11 +1,34 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { AdminService } from '@/services/adminService'
 import { User, Award, Medal, BarChart3, Calendar, MapPin, Mail, Edit } from 'lucide-react'
 import FlightStatistics from '@/components/dcs/FlightStatistics'
 
 export default function ProfilePage() {
   const { profile } = useAuth()
   const [activeTab, setActiveTab] = useState<'info' | 'statistics' | 'medals' | 'certifications'>('info')
+  const [userStats, setUserStats] = useState({ medals: 0, certifications: 0, dcsFlights: 0 })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (profile?.id) {
+      loadUserStats()
+    }
+  }, [profile?.id])
+
+  const loadUserStats = async () => {
+    if (!profile?.id) return
+    
+    try {
+      setLoading(true)
+      const stats = await AdminService.getUserStats(profile.id)
+      setUserStats(stats)
+    } catch (error) {
+      console.error('Error loading user stats:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!profile) {
     return (
@@ -23,62 +46,9 @@ export default function ProfilePage() {
   ]
 
   // Datos de ejemplo - estos vendrían de la base de datos
-  const userMedals = [
-    {
-      id: 1,
-      name: 'As del Aire',
-      description: 'Otorgada por excelencia en combate aéreo',
-      imageUrl: '/medals/ace.png',
-      dateAwarded: '2024-01-15',
-      awardedBy: 'Comando Central'
-    },
-    {
-      id: 2,
-      name: 'Veterano de Campaña',
-      description: 'Participación en 50+ misiones',
-      imageUrl: '/medals/veteran.png',
-      dateAwarded: '2024-02-20',
-      awardedBy: 'Estado Mayor'
-    },
-    {
-      id: 3,
-      name: 'Instructor Certificado',
-      description: 'Capacitación de nuevos pilotos',
-      imageUrl: '/medals/instructor.png',
-      dateAwarded: '2024-03-10',
-      awardedBy: 'Academia de Vuelo'
-    }
-  ]
-
-  const userCertifications = [
-    {
-      id: 1,
-      name: 'BVR (Beyond Visual Range)',
-      category: 'Combate Aéreo',
-      level: 'Avanzado',
-      dateObtained: '2024-01-10',
-      expiryDate: '2025-01-10',
-      status: 'Vigente'
-    },
-    {
-      id: 2,
-      name: 'CAS (Close Air Support)',
-      category: 'Apoyo Terrestre',
-      level: 'Intermedio',
-      dateObtained: '2023-11-15',
-      expiryDate: '2024-11-15',
-      status: 'Por Renovar'
-    },
-    {
-      id: 3,
-      name: 'SEAD (Suppression of Enemy Air Defenses)',
-      category: 'Guerra Electrónica',
-      level: 'Básico',
-      dateObtained: '2024-02-05',
-      expiryDate: '2025-02-05',
-      status: 'Vigente'
-    }
-  ]
+  // Los datos reales se cargarán desde la base de datos
+  const userMedals: any[] = []
+  const userCertifications: any[] = []
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -158,15 +128,21 @@ export default function ProfilePage() {
                 </div>
                 <div className="grid grid-cols-3 gap-6 flex-1">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-foreground">3</div>
+                    <div className="text-2xl font-bold text-foreground">
+                      {loading ? '...' : userStats.medals}
+                    </div>
                     <div className="text-sm text-muted-foreground">Medallas</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-foreground">3</div>
+                    <div className="text-2xl font-bold text-foreground">
+                      {loading ? '...' : userStats.certifications}
+                    </div>
                     <div className="text-sm text-muted-foreground">Certificaciones</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-foreground">5</div>
+                    <div className="text-2xl font-bold text-foreground">
+                      {loading ? '...' : userStats.dcsFlights}
+                    </div>
                     <div className="text-sm text-muted-foreground">Misiones DCS</div>
                   </div>
                 </div>

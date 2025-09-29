@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { AdminService, AdminStats } from '@/services/adminService'
 import { Shield, Users, Settings, Grid, Key, Award, Star, Plane, FileText, Eye, UserCheck, Medal, UserPlus } from 'lucide-react'
 import PermissionGuard, { PermissionCheck } from '@/components/auth/PermissionGuard'
 import PermissionManager from '@/components/admin/PermissionManager'
@@ -17,6 +18,24 @@ type TabType = 'overview' | 'permissions' | 'roles' | 'matrix' | 'users' | 'meda
 export default function AdminPage() {
   const { profile } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
+  const [stats, setStats] = useState<AdminStats | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadStats()
+  }, [])
+
+  const loadStats = async () => {
+    try {
+      setLoading(true)
+      const adminStats = await AdminService.getAdminStats()
+      setStats(adminStats)
+    } catch (error) {
+      console.error('Error loading admin stats:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Proteger toda la página de admin
   if (!profile) {
@@ -126,10 +145,10 @@ export default function AdminPage() {
                       Personal Activo
                     </p>
                     <p className="text-2xl font-bold text-foreground mt-2">
-                      24
+                      {loading ? '...' : stats?.activePersonnel || 0}
                     </p>
-                    <p className="text-sm mt-1 text-green-600">
-                      +2 este mes
+                    <p className="text-sm mt-1 text-muted-foreground">
+                      Usuarios registrados
                     </p>
                   </div>
                   <div className="bg-primary/10 p-3 rounded-lg">
@@ -145,10 +164,10 @@ export default function AdminPage() {
                       Certificaciones
                     </p>
                     <p className="text-2xl font-bold text-foreground mt-2">
-                      12
+                      {loading ? '...' : stats?.totalCertifications || 0}
                     </p>
                     <p className="text-sm mt-1 text-muted-foreground">
-                      3 categorías
+                      {loading ? '...' : stats?.certificationCategories || 0} categorías
                     </p>
                   </div>
                   <div className="bg-primary/10 p-3 rounded-lg">
@@ -164,10 +183,10 @@ export default function AdminPage() {
                       Medallas
                     </p>
                     <p className="text-2xl font-bold text-foreground mt-2">
-                      8
+                      {loading ? '...' : stats?.totalMedals || 0}
                     </p>
-                    <p className="text-sm mt-1 text-green-600">
-                      2 nuevas
+                    <p className="text-sm mt-1 text-muted-foreground">
+                      {loading ? '...' : stats?.newMedals || 0} nuevas este mes
                     </p>
                   </div>
                   <div className="bg-primary/10 p-3 rounded-lg">
@@ -183,7 +202,7 @@ export default function AdminPage() {
                       Candidatos
                     </p>
                     <p className="text-2xl font-bold text-foreground mt-2">
-                      5
+                      {loading ? '...' : stats?.pendingCandidates || 0}
                     </p>
                     <p className="text-sm mt-1 text-muted-foreground">
                       En revisión
