@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { Shield, Users, Settings, Grid, Key, Award, Star, Plane } from 'lucide-react'
+import { Shield, Users, Settings, Grid, Key, Award, Star, Plane, FileText } from 'lucide-react'
 import PermissionManager from '@/components/admin/PermissionManager'
 import RoleManager from '@/components/admin/RoleManager'
 import RolePermissionMatrix from '@/components/admin/RolePermissionMatrix'
 import MedalManager from '@/components/admin/MedalManager'
 import RankManager from '@/components/admin/RankManager'
 import UnitManager from '@/components/admin/UnitManager'
+import FormBuilder from '@/components/admin/FormBuilder'
 
-type TabType = 'overview' | 'permissions' | 'roles' | 'matrix' | 'users' | 'medals' | 'ranks' | 'units'
+type TabType = 'overview' | 'permissions' | 'roles' | 'matrix' | 'users' | 'medals' | 'ranks' | 'units' | 'forms'
 
 export default function AdminPage() {
   const { profile } = useAuth()
@@ -22,6 +23,7 @@ export default function AdminPage() {
     { id: 'medals' as TabType, name: 'Medallas', icon: Award },
     { id: 'ranks' as TabType, name: 'Rangos', icon: Star },
     { id: 'units' as TabType, name: 'Unidades', icon: Plane },
+    { id: 'forms' as TabType, name: 'Formularios', icon: FileText },
     { id: 'users' as TabType, name: 'Usuarios', icon: Users },
   ]
 
@@ -39,6 +41,8 @@ export default function AdminPage() {
         return <RankManager />
       case 'units':
         return <UnitManager />
+      case 'forms':
+        return <FormBuilder />
       case 'users':
         return (
           <div className="text-center py-12">
