@@ -8,21 +8,48 @@ export function usePermissions() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Por ahora, usar el rol directo hasta que implementemos role_id
-    if (profile?.role) {
+    if (profile?.role_id) {
       fetchUserPermissions()
+    } else if (profile?.role) {
+      // Fallback para usuarios que aún no tienen role_id (durante migración)
+      fetchUserPermissionsByRole()
     } else {
       setPermissions([])
       setLoading(false)
     }
-  }, [profile?.role])
+  }, [profile?.role_id, profile?.role])
 
   const fetchUserPermissions = async () => {
     try {
       setLoading(true)
       
-      // Por ahora, asignar permisos basados en el rol directo
-      // TODO: Implementar cuando tengamos role_id en profiles
+      // Obtener permisos del usuario basado en su role_id (RBAC completo)
+      const { data, error } = await (supabase as any)
+        .from('role_permissions')
+        .select(`
+          permission_id,
+          permissions!inner(name)
+        `)
+        .eq('role_id', profile?.role_id)
+
+      if (error) throw error
+
+      const userPermissions = data?.map((item: any) => item.permissions.name) || []
+      setPermissions(userPermissions)
+    } catch (error) {
+      console.error('Error fetching user permissions:', error)
+      // Fallback al sistema de roles simple
+      fetchUserPermissionsByRole()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchUserPermissionsByRole = async () => {
+    try {
+      setLoading(true)
+      
+      // Sistema de permisos basado en rol simple (fallback)
       let userPermissions: string[] = []
       
       switch (profile?.role) {
@@ -44,9 +71,8 @@ export function usePermissions() {
       }
       
       setPermissions(userPermissions)
-
     } catch (error) {
-      console.error('Error fetching user permissions:', error)
+      console.error('Error fetching user permissions by role:', error)
       setPermissions([])
     } finally {
       setLoading(false)
@@ -74,12 +100,22 @@ export function usePermissions() {
     return permissionList.every(permission => permissions.includes(permission))
   }
 
+  const getUserRole = () => {
+    return profile?.role || 'candidate'
+  }
+
+  const isAdmin = () => {
+    return profile?.role === 'admin'
+  }
+
   return {
     permissions,
     loading,
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,
+    getUserRole,
+    isAdmin,
     refetch: fetchUserPermissions
   }
 }
