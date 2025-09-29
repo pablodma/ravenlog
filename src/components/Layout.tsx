@@ -10,7 +10,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  Plane
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -20,6 +21,7 @@ const navigation = [
   { name: 'Personal', href: '/personnel', icon: Users },
   { name: 'Certificaciones', href: '/certifications', icon: Award },
   { name: 'Medallero', href: '/medals', icon: Medal },
+  { name: 'DCS World', href: '/dcs', icon: Plane },
 ]
 
 const adminNavigation = [

@@ -9,6 +9,7 @@ import PersonnelPage from '@/pages/PersonnelPage'
 import CertificationsPage from '@/pages/CertificationsPage'
 import MedalsPage from '@/pages/MedalsPage'
 import AdminPage from '@/pages/AdminPage'
+import DCSPage from '@/pages/DCSPage'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) {
@@ -57,6 +58,7 @@ function App() {
         <Route path="personnel" element={<PersonnelPage />} />
         <Route path="certifications" element={<CertificationsPage />} />
         <Route path="medals" element={<MedalsPage />} />
+        <Route path="dcs" element={<DCSPage />} />
         <Route path="admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
       </Route>
       
