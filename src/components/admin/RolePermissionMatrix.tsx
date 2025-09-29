@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Check, X, Save, RotateCcw } from 'lucide-react'
+import { X, Save, RotateCcw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 

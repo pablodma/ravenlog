@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { usePermissions } from '@/hooks/usePermissions'
-import { Shield, Lock } from 'lucide-react'
+import { Lock } from 'lucide-react'
 
 interface PermissionGuardProps {
   permission?: string

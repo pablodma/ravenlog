@@ -2,44 +2,49 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 
-interface Permission {
-  id: string
-  name: string
-  description: string
-  category: string
-}
-
 export function usePermissions() {
   const { profile } = useAuth()
   const [permissions, setPermissions] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (profile?.role_id) {
+    // Por ahora, usar el rol directo hasta que implementemos role_id
+    if (profile?.role) {
       fetchUserPermissions()
     } else {
       setPermissions([])
       setLoading(false)
     }
-  }, [profile?.role_id])
+  }, [profile?.role])
 
   const fetchUserPermissions = async () => {
     try {
       setLoading(true)
       
-      // Obtener permisos del usuario basado en su rol
-      const { data, error } = await (supabase as any)
-        .from('role_permissions')
-        .select(`
-          permission_id,
-          permissions!inner(name)
-        `)
-        .eq('role_id', profile?.role_id)
-
-      if (error) throw error
-
-      const userPermissions = data?.map((item: any) => item.permissions.name) || []
+      // Por ahora, asignar permisos basados en el rol directo
+      // TODO: Implementar cuando tengamos role_id en profiles
+      let userPermissions: string[] = []
+      
+      switch (profile?.role) {
+        case 'admin':
+          // Admin tiene todos los permisos
+          userPermissions = ['*'] // Wildcard para todos los permisos
+          break
+        case 'personnel':
+          userPermissions = [
+            'events.respond',
+            'logs.view_all'
+          ]
+          break
+        case 'candidate':
+          userPermissions = []
+          break
+        default:
+          userPermissions = []
+      }
+      
       setPermissions(userPermissions)
+
     } catch (error) {
       console.error('Error fetching user permissions:', error)
       setPermissions([])
@@ -50,21 +55,21 @@ export function usePermissions() {
 
   const hasPermission = (permission: string): boolean => {
     // Admin siempre tiene todos los permisos
-    if (profile?.role === 'admin') return true
+    if (profile?.role === 'admin' || permissions.includes('*')) return true
     
     return permissions.includes(permission)
   }
 
   const hasAnyPermission = (permissionList: string[]): boolean => {
     // Admin siempre tiene todos los permisos
-    if (profile?.role === 'admin') return true
+    if (profile?.role === 'admin' || permissions.includes('*')) return true
     
     return permissionList.some(permission => permissions.includes(permission))
   }
 
   const hasAllPermissions = (permissionList: string[]): boolean => {
     // Admin siempre tiene todos los permisos
-    if (profile?.role === 'admin') return true
+    if (profile?.role === 'admin' || permissions.includes('*')) return true
     
     return permissionList.every(permission => permissions.includes(permission))
   }
