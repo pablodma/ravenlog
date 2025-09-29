@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   Plane,
-  User
+  User,
+  Calendar
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Mi Perfil', href: '/profile', icon: User },
   { name: 'Enlistamiento', href: '/enrollment', icon: UserPlus },
   { name: 'Personal', href: '/personnel', icon: Users },
+  { name: 'Calendario', href: '/calendar', icon: Calendar },
   { name: 'DCS World', href: '/dcs', icon: Plane },
 ]
 

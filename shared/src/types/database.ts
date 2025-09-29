@@ -312,6 +312,185 @@ export interface Database {
           processed_at?: string
         }
       }
+      event_types: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          color: string
+          icon: string
+          is_system_type: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          color?: string
+          icon?: string
+          is_system_type?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          color?: string
+          icon?: string
+          is_system_type?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      flight_events_calendar: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          event_type_id: string | null
+          start_date: string
+          end_date: string
+          timezone: string
+          is_all_day: boolean
+          server_name: string | null
+          server_password: string | null
+          voice_channel: string | null
+          organizer_id: string
+          max_participants: number | null
+          min_participants: number
+          status: 'scheduled' | 'active' | 'completed' | 'cancelled'
+          visibility: 'public' | 'unit_only' | 'private'
+          required_aircraft: string[] | null
+          required_certifications: string[] | null
+          difficulty_level: 'beginner' | 'intermediate' | 'advanced' | 'expert'
+          briefing_notes: string | null
+          debrief_notes: string | null
+          external_links: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          event_type_id?: string | null
+          start_date: string
+          end_date: string
+          timezone?: string
+          is_all_day?: boolean
+          server_name?: string | null
+          server_password?: string | null
+          voice_channel?: string | null
+          organizer_id: string
+          max_participants?: number | null
+          min_participants?: number
+          status?: 'scheduled' | 'active' | 'completed' | 'cancelled'
+          visibility?: 'public' | 'unit_only' | 'private'
+          required_aircraft?: string[] | null
+          required_certifications?: string[] | null
+          difficulty_level?: 'beginner' | 'intermediate' | 'advanced' | 'expert'
+          briefing_notes?: string | null
+          debrief_notes?: string | null
+          external_links?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          event_type_id?: string | null
+          start_date?: string
+          end_date?: string
+          timezone?: string
+          is_all_day?: boolean
+          server_name?: string | null
+          server_password?: string | null
+          voice_channel?: string | null
+          organizer_id?: string
+          max_participants?: number | null
+          min_participants?: number
+          status?: 'scheduled' | 'active' | 'completed' | 'cancelled'
+          visibility?: 'public' | 'unit_only' | 'private'
+          required_aircraft?: string[] | null
+          required_certifications?: string[] | null
+          difficulty_level?: 'beginner' | 'intermediate' | 'advanced' | 'expert'
+          briefing_notes?: string | null
+          debrief_notes?: string | null
+          external_links?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      event_participants: {
+        Row: {
+          id: string
+          event_id: string
+          user_id: string
+          status: 'registered' | 'confirmed' | 'attended' | 'no_show' | 'cancelled'
+          role: 'participant' | 'flight_lead' | 'instructor' | 'observer'
+          aircraft: string | null
+          callsign: string | null
+          notes: string | null
+          registered_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          user_id: string
+          status?: 'registered' | 'confirmed' | 'attended' | 'no_show' | 'cancelled'
+          role?: 'participant' | 'flight_lead' | 'instructor' | 'observer'
+          aircraft?: string | null
+          callsign?: string | null
+          notes?: string | null
+          registered_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          user_id?: string
+          status?: 'registered' | 'confirmed' | 'attended' | 'no_show' | 'cancelled'
+          role?: 'participant' | 'flight_lead' | 'instructor' | 'observer'
+          aircraft?: string | null
+          callsign?: string | null
+          notes?: string | null
+          registered_at?: string
+          updated_at?: string
+        }
+      }
+      event_comments: {
+        Row: {
+          id: string
+          event_id: string
+          user_id: string
+          comment: string
+          is_briefing: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          user_id: string
+          comment: string
+          is_briefing?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          user_id?: string
+          comment?: string
+          is_briefing?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
