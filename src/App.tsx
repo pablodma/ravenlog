@@ -60,13 +60,7 @@ function App() {
         <Route path="admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
       </Route>
       
-      {/* Rutas directas para evitar 404 */}
-      <Route path="/dashboard" element={<ProtectedRoute><Layout><DashboardPage /></Layout></ProtectedRoute>} />
-      <Route path="/enrollment" element={<ProtectedRoute><Layout><EnrollmentPage /></Layout></ProtectedRoute>} />
-      <Route path="/personnel" element={<ProtectedRoute><Layout><PersonnelPage /></Layout></ProtectedRoute>} />
-      <Route path="/certifications" element={<ProtectedRoute><Layout><CertificationsPage /></Layout></ProtectedRoute>} />
-      <Route path="/medals" element={<ProtectedRoute><Layout><MedalsPage /></Layout></ProtectedRoute>} />
-      <Route path="/admin" element={<ProtectedRoute adminOnly><Layout><AdminPage /></Layout></ProtectedRoute>} />
+      
 
       {/* Fallback - redirigir según estado de auth */}
       <Route path="*" element={profile ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
