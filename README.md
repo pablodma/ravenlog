@@ -1,263 +1,273 @@
-# 🚁 RavenLog - Sistema de Gestión Militar
+# 🦅 RavenLog - Sistema de Gestión Militar DCS
 
-Sistema integral de gestión de personal para unidades aéreas de simulación militar en DCS World.
+[![Deploy Status](https://img.shields.io/badge/deploy-production-green)](https://ravenlog-dcs.vercel.app/)
+[![Version](https://img.shields.io/badge/version-1.1.1-blue)](https://github.com/pablodma/ravenlog)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## ✨ Características
+**RavenLog** es un sistema completo de gestión de personal para unidades aéreas militares simuladas en DCS World. Diseñado para escuadrones virtuales que buscan una experiencia realista y profesional.
 
-### 📋 Gestión de Personal
-- **Proceso de enlistamiento** completo con formularios y estados
-- **Nómina de personal** con rangos y unidades de vuelo
-- **Estados de aviadores** (activo, inactivo, permiso, baja)
-- **Hojas de personal** detalladas con historial de carrera
+## 🌐 **Demo en Vivo**
+**URL de Producción**: [https://ravenlog-dcs.vercel.app/](https://ravenlog-dcs.vercel.app/)
 
-### 🏅 Sistema de Certificaciones
-- Creación y gestión de certificaciones por categorías
-- Asignación de certificaciones a personal
-- Seguimiento de requisitos y vencimientos
-- Certificaciones por especialidad (BFM, BVR, CAS, SEAD, etc.)
+## ✨ **Características Principales**
 
-### 🏆 Medallero
-- Sistema de medallas con diferentes raridades
-- Puntuación por logros
-- Historial de condecoraciones
-- Criterios de otorgamiento
+### 🔐 **Sistema de Autenticación**
+- **Google OAuth** integrado
+- **Control de acceso basado en roles** (RBAC)
+- **Perfiles de usuario** con información completa
 
-### 🎮 Integración DCS
-- Parseo automático de logs de DCS World
-- Registro de eventos de simulador
-- Análisis de rendimiento en misiones
-- Historial de vuelos y combates
+### 👥 **Gestión de Personal**
+- **Proceso de enlistamiento** con formularios dinámicos
+- **Nómina de personal** con rangos y unidades
+- **Estados de aviador** (activo, inactivo, licencia, dado de baja)
+- **Asignación de callsigns** y unidades de vuelo
 
-### 🤖 Integración Discord
-- Bot para gestión de roles automática
-- Sistema RSVP para eventos
-- Sincronización de rangos y certificaciones
-- Notificaciones automáticas
+### 🏅 **Sistema de Reconocimientos**
+- **Medallas y condecoraciones** personalizables
+- **Certificaciones** por especialidades
+- **Historial de carrera** detallado
+- **Sistema de puntos** y rareza
 
-### ⚙️ Panel de Administración
-- Gestión de rangos con imágenes
-- Creación de certificaciones
-- Configuración de medallas
-- Gestión de usuarios y permisos
+### 📊 **Análisis de Logs DCS**
+- **Carga automática** de archivos `.log`, `.json`, `.jsonl`
+- **Estadísticas acumulativas** de vuelo
+- **Desglose por armas** y precisión
+- **Detección de duplicados** inteligente
+- **Historial de vuelos** completo
 
-## 🛠️ Stack Tecnológico
+### 📅 **Calendario de Eventos**
+- **Eventos de vuelo** programables
+- **Sistema RSVP** para participación
+- **8 tipos de eventos** predefinidos (Combate, BVR, BFM, CAS, SEAD, etc.)
+- **Gestión de participantes** con roles
+- **Briefing y debrief** integrados
+- **Configuración de servidor** DCS
 
-### Frontend
+### ⚙️ **Administración**
+- **Panel de control** completo
+- **Gestión de roles y permisos** granular
+- **Creador de formularios** dinámicos
+- **Procesamiento de candidatos** automatizado
+- **Estadísticas administrativas**
+
+## 🛠️ **Stack Tecnológico**
+
+### **Frontend**
 - **React 18** con TypeScript
 - **Vite** para build y desarrollo
 - **TailwindCSS** para estilos
-- **Radix UI** para componentes
-- **React Query** para estado del servidor
-- **React Router** para navegación
+- **Lucide React** para iconografía
+- **React Router DOM** para navegación
+- **TanStack Query** para gestión de estado
 
-### Backend
-- **Node.js** con TypeScript
-- **Express** para API REST
-- **Supabase** como base de datos y autenticación
-- **Google OAuth** para autenticación
+### **Backend**
+- **Supabase** como BaaS
+- **PostgreSQL** con RLS (Row Level Security)
+- **Supabase Auth** para autenticación
+- **Real-time subscriptions**
 
-### Base de Datos
-- **PostgreSQL** (via Supabase)
-- **Row Level Security (RLS)**
-- **Migraciones automáticas**
-- **Tipos generados automáticamente**
+### **Infraestructura**
+- **Vercel** para hosting y CI/CD
+- **GitHub** para control de versiones
+- **Supabase Cloud** para base de datos
 
-## 🚀 Instalación
+## 🚀 **Instalación y Desarrollo**
 
-### Prerrequisitos
-- Node.js >= 18
+### **Prerrequisitos**
+- Node.js 18+
 - npm o yarn
 - Cuenta de Supabase
-- Proyecto de Google Cloud (para OAuth)
+- Cuenta de Google Cloud (para OAuth)
 
-### Configuración Inicial
+### **Configuración Local**
 
 1. **Clonar el repositorio**
-   ```bash
-   git clone <repo-url>
-   cd ravenlog
-   ```
+```bash
+git clone https://github.com/pablodma/ravenlog.git
+cd ravenlog
+```
 
 2. **Instalar dependencias**
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
-3. **Configurar Supabase**
-   ```bash
-   # Instalar Supabase CLI
-   npm install -g supabase
-   
-   # Inicializar proyecto local
-   supabase start
-   
-   # Aplicar migraciones
-   supabase db push
-   
-   # Generar tipos
-   npm run db:generate-types
-   ```
+3. **Configurar variables de entorno**
+```bash
+# Crear archivo .env con las siguientes variables:
+VITE_SUPABASE_URL=tu_supabase_url
+VITE_SUPABASE_ANON_KEY=tu_supabase_anon_key
+```
 
-4. **Configurar variables de entorno**
-   
-   **Backend (.env)**:
-   ```env
-   SUPABASE_URL=your_supabase_project_url
-   SUPABASE_ANON_KEY=your_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-   NODE_ENV=development
-   PORT=5000
-   FRONTEND_URL=http://localhost:3000
-   ```
+4. **Ejecutar migraciones de base de datos**
+- Ejecutar los archivos SQL en `supabase/migrations/` en orden
+- Aplicar los datos semilla desde `supabase/seed.sql`
 
-   **Frontend (.env)**:
-   ```env
-   VITE_SUPABASE_URL=your_supabase_project_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
-
-5. **Configurar Google OAuth en Supabase**
-   - Ir a Authentication → Settings → Auth Providers
-   - Habilitar Google Provider
-   - Configurar Client ID y Secret de Google Cloud Console
-
-## 💻 Desarrollo
-
-### Ejecutar en modo desarrollo
+5. **Iniciar desarrollo**
 ```bash
 npm run dev
 ```
 
-Esto iniciará:
-- Frontend en http://localhost:3000
-- Backend en http://localhost:5000
-- Supabase local en http://localhost:54323
-
-### Scripts disponibles
-
+### **Build de Producción**
 ```bash
-# Desarrollo
-npm run dev                 # Ejecutar frontend y backend
-npm run dev:frontend       # Solo frontend
-npm run dev:backend        # Solo backend
-
-# Build
-npm run build              # Build completo
-npm run build:frontend     # Build frontend
-npm run build:backend      # Build backend
-
-# Base de datos
-npm run db:generate-types  # Generar tipos de TypeScript desde Supabase
-
-# Linting y testing
-npm run lint              # Linter en todos los workspaces
-npm run test              # Tests en todos los workspaces
+npm run build
 ```
 
-## 📊 Estructura del Proyecto
+## 📋 **Estructura del Proyecto**
 
 ```
 ravenlog/
-├── frontend/              # React + Vite
-│   ├── src/
-│   │   ├── components/    # Componentes reutilizables
-│   │   ├── pages/         # Páginas de la aplicación
-│   │   ├── hooks/         # Custom hooks
-│   │   ├── lib/           # Utilidades y configuración
-│   │   ├── contexts/      # Context providers
-│   │   └── services/      # Servicios de API
-│   └── public/
-├── backend/               # Node.js + Express
-│   ├── src/
-│   │   ├── routes/        # Rutas de API
-│   │   ├── middleware/    # Middleware Express
-│   │   ├── services/      # Lógica de negocio
-│   │   ├── utils/         # Utilidades
-│   │   └── types/         # Tipos TypeScript
-│   └── dist/
-├── shared/                # Tipos y utilidades compartidas
-│   ├── src/
-│   │   ├── types/         # Tipos de base de datos
-│   │   └── schemas/       # Esquemas de validación
-│   └── dist/
-└── supabase/             # Configuración de base de datos
-    ├── migrations/       # Migraciones SQL
-    ├── config.toml       # Configuración Supabase
-    └── seed.sql         # Datos iniciales
+├── src/
+│   ├── components/          # Componentes React
+│   │   ├── admin/          # Panel administrativo
+│   │   ├── auth/           # Autenticación y permisos
+│   │   ├── calendar/       # Sistema de calendario
+│   │   ├── dcs/            # Análisis de logs DCS
+│   │   └── recruitment/    # Sistema de enlistamiento
+│   ├── contexts/           # Contextos de React
+│   ├── hooks/              # Hooks personalizados
+│   ├── pages/              # Páginas principales
+│   ├── services/           # Servicios de API
+│   └── utils/              # Utilidades
+├── shared/                 # Tipos y esquemas compartidos
+├── supabase/              # Migraciones y configuración DB
+└── public/                # Archivos estáticos
 ```
 
-## 🔐 Autenticación y Autorización
+## 🔧 **Configuración de Producción**
 
-### Roles de Usuario
-- **Admin**: Acceso completo al sistema
-- **Personnel**: Personal activo de la unidad
-- **Candidate**: Candidatos en proceso de enlistamiento
+### **Supabase Setup**
+1. Crear proyecto en Supabase
+2. Configurar Google OAuth en Authentication
+3. Ejecutar migraciones SQL
+4. Configurar RLS policies
+5. Agregar datos semilla
 
-### Permisos
-- Candidatos solo pueden ver y editar sus solicitudes
-- Personal puede ver información de la unidad
-- Administradores tienen acceso completo
+### **Vercel Deployment**
+1. Conectar repositorio GitHub
+2. Configurar variables de entorno
+3. Deploy automático en cada push
 
-## 📚 Módulos Principales
+### **Variables de Entorno Requeridas**
+```env
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_ANON_KEY=tu_clave_anonima
+```
 
-### 1. Enlistamiento
-- Formulario de solicitud para candidatos
-- Sistema de revisión para administradores
-- Estados: Pendiente → En Revisión → Aceptado/Rechazado
+## 👥 **Roles y Permisos**
 
-### 2. Gestión de Personal
-- Lista de personal activo
-- Gestión de rangos y promociones
-- Asignación de unidades de vuelo
-- Integración con Discord
+### **Candidate (Candidato)**
+- Ver información básica
+- Completar proceso de enlistamiento
+- Ver eventos públicos
 
-### 3. Certificaciones
-- Catálogo de certificaciones disponibles
-- Proceso de otorgamiento
-- Seguimiento de requisitos
-- Certificaciones con vencimiento
+### **Personnel (Personal)**
+- Acceso completo a su perfil
+- Cargar logs DCS
+- Crear y participar en eventos
+- Ver estadísticas personales
 
-### 4. Medallero
-- Sistema de logros gamificado
-- Diferentes raridades de medallas
-- Sistema de puntuación
-- Historial de condecoraciones
+### **Admin (Administrador)**
+- Gestión completa del sistema
+- Administrar usuarios y roles
+- Crear medallas y certificaciones
+- Procesar candidatos
+- Acceso a todas las estadísticas
 
-### 5. Integración DCS
-- Parser de logs de DCS World
-- Análisis automático de eventos
-- Estadísticas de rendimiento
+## 📊 **Funcionalidades por Módulo**
+
+### **Dashboard**
+- Resumen de actividad
+- Estadísticas rápidas
+- Acciones frecuentes
+- Notificaciones
+
+### **Perfil**
+- Información personal
+- Estadísticas DCS
+- Medallas obtenidas
+- Certificaciones
+
+### **Calendario**
+- Vista mensual de eventos
+- Creación de misiones
+- Sistema RSVP
+- Gestión de participantes
+
+### **DCS World**
+- Carga de logs
+- Estadísticas de vuelo
 - Historial de misiones
+- Análisis de precisión
 
-## 🤝 Contribución
+### **Administración**
+- Gestión de usuarios
+- Control de permisos
+- Configuración del sistema
+- Reportes administrativos
+
+## 🔒 **Seguridad**
+
+- **Row Level Security (RLS)** en todas las tablas
+- **Autenticación OAuth** segura
+- **Permisos granulares** por funcionalidad
+- **Validación de datos** en frontend y backend
+- **Sanitización** de inputs de usuario
+
+## 🚀 **Roadmap**
+
+### **Próximas Funcionalidades**
+- [ ] Integración con Discord
+- [ ] Sistema de notificaciones
+- [ ] Reportes avanzados
+- [ ] API pública
+- [ ] Aplicación móvil
+- [ ] Integración con SRS
+
+### **Mejoras Técnicas**
+- [ ] Optimización de performance
+- [ ] Tests automatizados
+- [ ] Documentación API
+- [ ] Monitoreo y logging
+- [ ] Backup automatizado
+
+## 🤝 **Contribuir**
 
 1. Fork el proyecto
-2. Crea una rama feature (`git checkout -b feature/amazing-feature`)
-3. Commit tus cambios (`git commit -m 'Add amazing feature'`)
-4. Push a la rama (`git push origin feature/amazing-feature`)
-5. Abre un Pull Request
+2. Crear feature branch (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit cambios (`git commit -m 'Agregar nueva funcionalidad'`)
+4. Push al branch (`git push origin feature/nueva-funcionalidad`)
+5. Abrir Pull Request
 
-## 📝 Próximas Funcionalidades
+## 📝 **Changelog**
 
-- [ ] Sistema completo de Discord bot
-- [ ] Parser avanzado de logs DCS
-- [ ] Dashboard de estadísticas
-- [ ] Sistema de eventos y RSVP
-- [ ] Módulo de entrenamiento
-- [ ] Reportes y analíticas
-- [ ] Aplicación móvil
+### **v1.1.1** (2025-01-29)
+- ✅ Sistema de calendario completo
+- ✅ Gestión de eventos de vuelo
+- ✅ Sistema RSVP
+- ✅ 8 tipos de eventos predefinidos
+- ✅ Mejoras en UI/UX
 
-## 📄 Licencia
+### **v1.0.0** (2025-01-28)
+- ✅ Sistema base completo
+- ✅ Autenticación Google OAuth
+- ✅ RBAC dinámico
+- ✅ Análisis de logs DCS
+- ✅ Sistema de medallas y certificaciones
+- ✅ Proceso de enlistamiento
 
-Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más información.
+## 📄 **Licencia**
 
-## 🆘 Soporte
+Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
 
-Si tienes problemas o preguntas:
-1. Revisa la documentación
-2. Busca en los issues existentes
-3. Crea un nuevo issue si es necesario
+## 📞 **Soporte**
+
+- **Issues**: [GitHub Issues](https://github.com/pablodma/ravenlog/issues)
+- **Documentación**: [Wiki del Proyecto](https://github.com/pablodma/ravenlog/wiki)
+- **Email**: pablo.duro@ravenlog.com
 
 ---
 
-**Desarrollado con ❤️ para la comunidad de simulación militar DCS**
+**Desarrollado con ❤️ para la comunidad DCS**
+
+*RavenLog - Elevando el realismo en la simulación militar*

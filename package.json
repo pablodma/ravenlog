@@ -3,7 +3,18 @@
   "private": true,
   "version": "1.1.1",
   "type": "module",
-  "description": "Sistema de gestión de personal para unidad aérea militar simulada",
+  "description": "Sistema completo de gestión de personal para unidades aéreas militares simuladas en DCS World",
+  "keywords": ["dcs", "military", "simulation", "squadron", "management", "react", "supabase"],
+  "author": "Pablo Duro <pablo.duro@ravenlog.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pablodma/ravenlog.git"
+  },
+  "homepage": "https://ravenlog-dcs.vercel.app",
+  "bugs": {
+    "url": "https://github.com/pablodma/ravenlog/issues"
+  },
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "npm run build:shared && tsc && vite build",
