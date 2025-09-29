@@ -132,3 +132,5 @@ Thumbs.db
 .migration_tmp
 *.json
 client_secret_*.json
+
+.vercel
