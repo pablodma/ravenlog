@@ -10,7 +10,10 @@ export default function LoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && user && profile) {
+    console.log('🔍 LOGIN REDIRECT DEBUG:', { loading, user: !!user, profile: !!profile })
+    
+    if (!loading && user) {
+      console.log('✅ Usuario logueado, redirigiendo a dashboard')
       router.push('/dashboard')
     }
   }, [user, profile, loading, router])
