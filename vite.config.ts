@@ -13,12 +13,11 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    // Simplificar build para Vercel
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          supabase: ['@supabase/supabase-js']
-        }
+        // Remover manual chunks - usar build estándar
+        manualChunks: undefined
       }
     }
   },
