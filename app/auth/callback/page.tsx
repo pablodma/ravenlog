@@ -3,6 +3,7 @@
 import { useContext, useEffect } from 'react'
 import { AuthContext } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function AuthCallbackPage() {
@@ -13,14 +14,30 @@ export default function AuthCallbackPage() {
     console.log('🔄 AuthCallback: Verificando sesión...')
     console.log('🔄 AuthCallback: loading =', loading, 'user =', !!user)
     
-    if (!loading) {
-      if (user) {
-        console.log('✅ AuthCallback: Usuario autenticado, redirigiendo a dashboard')
-        router.push('/dashboard')
-      } else {
-        console.log('❌ AuthCallback: No hay usuario, redirigiendo a login')
-        router.push('/login')
+    // Esperar más tiempo para que Supabase procese la sesión
+    const checkSession = async () => {
+      console.log('⏳ AuthCallback: Esperando sesión de Supabase...')
+      
+      // Esperar hasta 10 segundos para que la sesión se establezca
+      for (let i = 0; i < 20; i++) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        const { data: { session } } = await supabase.auth.getSession()
+        console.log(`🔄 AuthCallback: Intento ${i + 1}/20 - session:`, !!session)
+        
+        if (session?.user) {
+          console.log('✅ AuthCallback: Sesión encontrada, redirigiendo a dashboard')
+          router.push('/dashboard')
+          return
+        }
       }
+      
+      console.log('❌ AuthCallback: Timeout - no se encontró sesión, redirigiendo a login')
+      router.push('/login')
+    }
+    
+    if (!loading) {
+      checkSession()
     }
   }, [user, loading, router])
 
