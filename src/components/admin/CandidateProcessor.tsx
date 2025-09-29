@@ -50,6 +50,8 @@ export default function CandidateProcessor() {
 
   const fetchData = async () => {
     try {
+      console.log('Fetching candidate processor data...')
+      
       const [applicationsResponse, ranksResponse, unitsResponse] = await Promise.all([
         (supabase as any)
           .from('applications')
@@ -72,16 +74,36 @@ export default function CandidateProcessor() {
           .order('name')
       ])
 
-      if (applicationsResponse.error) throw applicationsResponse.error
-      if (ranksResponse.error) throw ranksResponse.error
-      if (unitsResponse.error) throw unitsResponse.error
+      console.log('Applications response:', applicationsResponse)
+      console.log('Ranks response:', ranksResponse)
+      console.log('Units response:', unitsResponse)
+
+      if (applicationsResponse.error) {
+        console.error('Applications error:', applicationsResponse.error)
+        throw applicationsResponse.error
+      }
+      if (ranksResponse.error) {
+        console.error('Ranks error:', ranksResponse.error)
+        throw ranksResponse.error
+      }
+      if (unitsResponse.error) {
+        console.error('Units error:', unitsResponse.error)
+        throw unitsResponse.error
+      }
 
       setApprovedApplications(applicationsResponse.data || [])
       setRanks(ranksResponse.data || [])
       setUnits(unitsResponse.data || [])
+      
+      console.log('Data loaded successfully:', {
+        applications: applicationsResponse.data?.length || 0,
+        ranks: ranksResponse.data?.length || 0,
+        units: unitsResponse.data?.length || 0
+      })
     } catch (error) {
       console.error('Error fetching data:', error)
-      toast.error('Error al cargar datos')
+      console.error('Error details:', JSON.stringify(error, null, 2))
+      toast.error(`Error al cargar datos: ${error.message || 'Error desconocido'}`)
     } finally {
       setLoading(false)
     }

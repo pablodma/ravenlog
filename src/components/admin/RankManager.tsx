@@ -41,16 +41,25 @@ export default function RankManager() {
 
   const fetchRanks = async () => {
     try {
+      console.log('Fetching ranks...')
       const { data, error } = await (supabase as any)
         .from('ranks')
         .select('*')
         .order('order_index')
 
-      if (error) throw error
+      console.log('Ranks response:', { data, error })
+      
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
+      
       setRanks(data || [])
+      console.log('Ranks loaded successfully:', data?.length || 0)
     } catch (error) {
       console.error('Error fetching ranks:', error)
-      toast.error('Error al cargar rangos')
+      console.error('Error details:', JSON.stringify(error, null, 2))
+      toast.error(`Error al cargar rangos: ${error.message || 'Error desconocido'}`)
     } finally {
       setLoading(false)
     }
