@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Shield, Users, Settings, Grid, Key, Award, Star, Plane, FileText, Eye, UserCheck } from 'lucide-react'
+import PermissionGuard, { PermissionCheck } from '@/components/auth/PermissionGuard'
+import RoleGuard from '@/components/auth/RoleGuard'
 import PermissionManager from '@/components/admin/PermissionManager'
 import RoleManager from '@/components/admin/RoleManager'
 import RolePermissionMatrix from '@/components/admin/RolePermissionMatrix'
@@ -17,47 +19,94 @@ export default function AdminPage() {
   const { profile } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
 
+  // Proteger toda la página de admin
+  if (!profile) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
   const tabs = [
-    { id: 'overview' as TabType, name: 'Resumen', icon: Grid },
-    { id: 'applications' as TabType, name: 'Aplicaciones', icon: Eye },
-    { id: 'processing' as TabType, name: 'Procesamiento', icon: UserCheck },
-    { id: 'forms' as TabType, name: 'Formularios', icon: FileText },
-    { id: 'permissions' as TabType, name: 'Permisos', icon: Key },
-    { id: 'roles' as TabType, name: 'Roles', icon: Shield },
-    { id: 'matrix' as TabType, name: 'Asignaciones', icon: Settings },
-    { id: 'medals' as TabType, name: 'Medallas', icon: Award },
-    { id: 'ranks' as TabType, name: 'Rangos', icon: Star },
-    { id: 'units' as TabType, name: 'Unidades', icon: Plane },
-    { id: 'users' as TabType, name: 'Usuarios', icon: Users },
+    { id: 'overview' as TabType, name: 'Resumen', icon: Grid, permission: null },
+    { id: 'applications' as TabType, name: 'Aplicaciones', icon: Eye, permission: 'recruitment.review_applications' },
+    { id: 'processing' as TabType, name: 'Procesamiento', icon: UserCheck, permission: 'recruitment.process_applications' },
+    { id: 'forms' as TabType, name: 'Formularios', icon: FileText, permission: 'recruitment.create_forms' },
+    { id: 'permissions' as TabType, name: 'Permisos', icon: Key, permission: 'admin.manage_permissions' },
+    { id: 'roles' as TabType, name: 'Roles', icon: Shield, permission: 'admin.manage_roles' },
+    { id: 'matrix' as TabType, name: 'Asignaciones', icon: Settings, permission: 'admin.manage_permissions' },
+    { id: 'medals' as TabType, name: 'Medallas', icon: Award, permission: 'medals.create' },
+    { id: 'ranks' as TabType, name: 'Rangos', icon: Star, permission: 'ranks.create' },
+    { id: 'units' as TabType, name: 'Unidades', icon: Plane, permission: 'units.create' },
+    { id: 'users' as TabType, name: 'Usuarios', icon: Users, permission: 'admin.assign_roles' },
   ]
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'applications':
-        return <ApplicationReview />
+        return (
+          <PermissionGuard permission="recruitment.review_applications">
+            <ApplicationReview />
+          </PermissionGuard>
+        )
       case 'processing':
-        return <CandidateProcessor />
+        return (
+          <PermissionGuard permission="recruitment.process_applications">
+            <CandidateProcessor />
+          </PermissionGuard>
+        )
       case 'forms':
-        return <FormBuilder />
+        return (
+          <PermissionGuard permission="recruitment.create_forms">
+            <FormBuilder />
+          </PermissionGuard>
+        )
       case 'permissions':
-        return <PermissionManager />
+        return (
+          <PermissionGuard permission="admin.manage_permissions">
+            <PermissionManager />
+          </PermissionGuard>
+        )
       case 'roles':
-        return <RoleManager />
+        return (
+          <PermissionGuard permission="admin.manage_roles">
+            <RoleManager />
+          </PermissionGuard>
+        )
       case 'matrix':
-        return <RolePermissionMatrix />
+        return (
+          <PermissionGuard permission="admin.manage_permissions">
+            <RolePermissionMatrix />
+          </PermissionGuard>
+        )
       case 'medals':
-        return <MedalManager />
+        return (
+          <PermissionGuard permission="medals.create">
+            <MedalManager />
+          </PermissionGuard>
+        )
       case 'ranks':
-        return <RankManager />
+        return (
+          <PermissionGuard permission="ranks.create">
+            <RankManager />
+          </PermissionGuard>
+        )
       case 'units':
-        return <UnitManager />
+        return (
+          <PermissionGuard permission="units.create">
+            <UnitManager />
+          </PermissionGuard>
+        )
       case 'users':
         return (
-          <div className="text-center py-12">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Gestión de Usuarios</h3>
-            <p className="text-gray-600">Esta funcionalidad estará disponible próximamente</p>
-          </div>
+          <PermissionGuard permission="admin.assign_roles">
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Gestión de Usuarios</h3>
+              <p className="text-gray-600">Esta funcionalidad estará disponible próximamente</p>
+            </div>
+          </PermissionGuard>
         )
       default:
         return (
@@ -168,18 +217,19 @@ export default function AdminPage() {
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.name}
-                </button>
+                <PermissionCheck key={tab.id} permission={tab.permission || undefined}>
+                  <button
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                      activeTab === tab.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.name}
+                  </button>
+                </PermissionCheck>
               )
             })}
           </nav>
