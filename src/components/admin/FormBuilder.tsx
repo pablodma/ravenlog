@@ -113,10 +113,13 @@ export default function FormBuilder() {
 
   const handleEdit = (formItem: RecruitmentForm) => {
     setEditingForm(formItem)
+    // Asegurar que fields sea un array válido
+    const normalizedFields = Array.isArray(formItem.fields) ? formItem.fields : []
+    console.log('📝 FormBuilder: Editando formulario:', formItem.title, 'Fields:', normalizedFields)
     setForm({
       title: formItem.title,
       description: formItem.description || '',
-      fields: formItem.fields,
+      fields: normalizedFields,
       is_active: formItem.is_active
     })
     setShowForm(true)
@@ -277,7 +280,7 @@ export default function FormBuilder() {
               </div>
 
               <div className="space-y-4">
-                {form.fields.map((field, index) => (
+                {(form.fields || []).map((field, index) => (
                   <div key={field.id} className="border border-gray-200 rounded-lg p-4">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
                       <div>

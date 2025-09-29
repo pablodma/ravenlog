@@ -225,7 +225,7 @@ export default function ApplicationReview() {
               <div className="space-y-4 mb-6">
                 <h4 className="font-medium text-gray-900">Respuestas del Formulario</h4>
                 <div className="space-y-3">
-                  {selectedApplication.recruitment_form.fields.map((field: any) => (
+                  {(selectedApplication.recruitment_form.fields || []).map((field: any) => (
                     <div key={field.id} className="border-b border-gray-100 pb-3">
                       <dt className="text-sm font-medium text-gray-700 mb-1">
                         {field.label}

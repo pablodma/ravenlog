@@ -75,11 +75,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🔍 fetchProfile: Iniciando para usuario:', userId)
       console.log('🔍 fetchProfile: Estado actual - loading:', loading, 'profile:', !!profile)
       
+      // Timeout de seguridad para evitar loading infinito
+      const timeoutId = setTimeout(() => {
+        console.error('⏰ fetchProfile: Timeout - forzando loading=false')
+        setLoading(false)
+      }, 10000) // 10 segundos
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
+      
+      clearTimeout(timeoutId) // Cancelar timeout si la consulta termina
 
       if (error) {
         console.error('❌ fetchProfile: Error en consulta:', error)

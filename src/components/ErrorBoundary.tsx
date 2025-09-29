@@ -43,6 +43,15 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false, error: undefined, errorInfo: undefined });
   };
 
+  handleClearStorage = () => {
+    console.log('🧹 ErrorBoundary: Limpiando storage y recargando...');
+    // Limpiar localStorage y sessionStorage
+    localStorage.clear();
+    sessionStorage.clear();
+    // Recargar la página
+    window.location.reload();
+  };
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
@@ -89,6 +98,14 @@ export class ErrorBoundary extends Component<Props, State> {
               >
                 <RefreshCw className="h-4 w-4" />
                 Intentar de nuevo
+              </button>
+              
+              <button
+                onClick={this.handleClearStorage}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Limpiar caché y recargar
               </button>
               
               <button

@@ -241,11 +241,16 @@ export class CalendarService {
               }
 
               // Contar participantes
-              const { count } = await (supabase as any)
-                .from('event_participants')
-                .select('*', { count: 'exact', head: true })
-                .eq('event_id', event.id);
-              event.participant_count = count || 0;
+              try {
+                const { count } = await (supabase as any)
+                  .from('event_participants')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('event_id', event.id);
+                event.participant_count = count || 0;
+              } catch (participantError) {
+                console.warn('Error loading participant count for event:', event.id, participantError);
+                event.participant_count = 0;
+              }
 
               return event;
             } catch (detailError) {
