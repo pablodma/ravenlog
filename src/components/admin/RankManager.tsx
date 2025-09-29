@@ -41,7 +41,7 @@ export default function RankManager() {
 
   const fetchRanks = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ranks')
         .select('*')
         .order('order_index', { ascending: true })
@@ -96,7 +96,7 @@ export default function RankManager() {
     
     try {
       if (editingRank) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('ranks')
           .update(form)
           .eq('id', editingRank.id)
@@ -104,7 +104,7 @@ export default function RankManager() {
         if (error) throw error
         toast.success('Rango actualizado exitosamente')
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('ranks')
           .insert([form])
 
@@ -136,7 +136,7 @@ export default function RankManager() {
     if (!confirm('¿Estás seguro de eliminar este rango?')) return
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('ranks')
         .delete()
         .eq('id', id)

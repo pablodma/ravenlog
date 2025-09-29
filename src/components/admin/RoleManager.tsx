@@ -50,7 +50,7 @@ export default function RoleManager() {
   const fetchRoles = async () => {
     try {
       // Obtener roles con conteo de usuarios
-      const { data: rolesData, error } = await supabase
+      const { data: rolesData, error } = await (supabase as any)
         .from('roles')
         .select(`
           *,
@@ -61,9 +61,9 @@ export default function RoleManager() {
       if (error) throw error
 
       // Formatear datos para incluir conteo
-      const rolesWithCount = rolesData?.map(role => ({
+      const rolesWithCount = rolesData?.map((role: any) => ({
         ...role,
-        user_count: (role as any).user_count?.[0]?.count || 0
+        user_count: role.user_count?.[0]?.count || 0
       })) || []
 
       setRoles(rolesWithCount)
@@ -81,7 +81,7 @@ export default function RoleManager() {
     try {
       if (editingRole) {
         // Actualizar rol existente
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('roles')
           .update(form)
           .eq('id', editingRole.id)
@@ -90,7 +90,7 @@ export default function RoleManager() {
         toast.success('Rol actualizado exitosamente')
       } else {
         // Crear nuevo rol
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('roles')
           .insert([{ ...form, is_system_role: false }])
 
@@ -135,7 +135,7 @@ export default function RoleManager() {
     if (!confirm(`¿Estás seguro de eliminar el rol "${role.name}"?`)) return
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('roles')
         .delete()
         .eq('id', role.id)

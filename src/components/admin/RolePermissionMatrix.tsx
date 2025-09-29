@@ -69,7 +69,7 @@ export default function RolePermissionMatrix() {
     try {
       if (currentlyHas) {
         // Quitar permiso
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('role_permissions')
           .delete()
           .eq('role_id', roleId)
@@ -82,7 +82,7 @@ export default function RolePermissionMatrix() {
         )
       } else {
         // Agregar permiso
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('role_permissions')
           .insert([{ role_id: roleId, permission_id: permissionId }])
 

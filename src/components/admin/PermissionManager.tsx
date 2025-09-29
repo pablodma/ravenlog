@@ -65,7 +65,7 @@ export default function PermissionManager() {
     try {
       if (editingPermission) {
         // Actualizar permiso existente
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('permissions')
           .update(form)
           .eq('id', editingPermission.id)
@@ -74,7 +74,7 @@ export default function PermissionManager() {
         toast.success('Permiso actualizado exitosamente')
       } else {
         // Crear nuevo permiso
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('permissions')
           .insert([form])
 

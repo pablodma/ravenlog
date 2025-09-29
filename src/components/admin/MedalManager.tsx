@@ -41,7 +41,7 @@ export default function MedalManager() {
 
   const fetchMedals = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('medals')
         .select('*')
         .order('created_at', { ascending: false })
@@ -96,7 +96,7 @@ export default function MedalManager() {
     
     try {
       if (editingMedal) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('medals')
           .update(form)
           .eq('id', editingMedal.id)
@@ -104,7 +104,7 @@ export default function MedalManager() {
         if (error) throw error
         toast.success('Medalla actualizada exitosamente')
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('medals')
           .insert([form])
 
@@ -136,7 +136,7 @@ export default function MedalManager() {
     if (!confirm('¿Estás seguro de eliminar esta medalla?')) return
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('medals')
         .delete()
         .eq('id', id)
