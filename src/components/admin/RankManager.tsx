@@ -44,7 +44,7 @@ export default function RankManager() {
       const { data, error } = await (supabase as any)
         .from('ranks')
         .select('*')
-        .order('order_index', { ascending: true })
+        .order('order_index')
 
       if (error) throw error
       setRanks(data || [])
