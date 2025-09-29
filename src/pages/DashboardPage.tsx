@@ -5,36 +5,6 @@ import { Users, Award, Medal, UserPlus, Activity, Calendar } from 'lucide-react'
 export default function DashboardPage() {
   const { profile } = useAuth()
 
-  const stats = [
-    {
-      name: 'Personal Activo',
-      value: '24',
-      change: '+2 este mes',
-      changeType: 'positive',
-      icon: Users
-    },
-    {
-      name: 'Certificaciones',
-      value: '12',
-      change: '3 categorías',
-      changeType: 'neutral',
-      icon: Award
-    },
-    {
-      name: 'Medallas',
-      value: '8',
-      change: '2 nuevas',
-      changeType: 'positive',
-      icon: Medal
-    },
-    {
-      name: 'Candidatos',
-      value: '5',
-      change: 'En revisión',
-      changeType: 'neutral',
-      icon: UserPlus
-    }
-  ]
 
   return (
     <div className="space-y-6">
@@ -71,36 +41,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => {
-          const Icon = stat.icon
-          return (
-            <div key={stat.name} className="bg-card rounded-lg border p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {stat.name}
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-2">
-                    {stat.value}
-                  </p>
-                  <p className={`text-sm mt-1 ${
-                    stat.changeType === 'positive' ? 'text-green-600' :
-                    stat.changeType === 'negative' ? 'text-red-600' :
-                    'text-muted-foreground'
-                  }`}>
-                    {stat.change}
-                  </p>
-                </div>
-                <div className="bg-primary/10 p-3 rounded-lg">
-                  <Icon className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
 
       {/* Contenido principal en dos columnas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

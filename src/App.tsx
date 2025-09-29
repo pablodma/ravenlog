@@ -6,10 +6,9 @@ import LoginPage from '@/pages/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
 import EnrollmentPage from '@/pages/EnrollmentPage'
 import PersonnelPage from '@/pages/PersonnelPage'
-import CertificationsPage from '@/pages/CertificationsPage'
-import MedalsPage from '@/pages/MedalsPage'
 import AdminPage from '@/pages/AdminPage'
 import DCSPage from '@/pages/DCSPage'
+import ProfilePage from '@/pages/ProfilePage'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) {
@@ -56,10 +55,9 @@ function App() {
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="enrollment" element={<EnrollmentPage />} />
         <Route path="personnel" element={<PersonnelPage />} />
-        <Route path="certifications" element={<CertificationsPage />} />
-        <Route path="medals" element={<MedalsPage />} />
-        <Route path="dcs" element={<DCSPage />} />
-        <Route path="admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
+            <Route path="dcs" element={<DCSPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
       </Route>
       
       

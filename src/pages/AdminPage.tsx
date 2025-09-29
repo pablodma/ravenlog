@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { Shield, Users, Settings, Grid, Key, Award, Star, Plane, FileText, Eye, UserCheck } from 'lucide-react'
+import { Shield, Users, Settings, Grid, Key, Award, Star, Plane, FileText, Eye, UserCheck, Medal, UserPlus } from 'lucide-react'
 import PermissionGuard, { PermissionCheck } from '@/components/auth/PermissionGuard'
 import PermissionManager from '@/components/admin/PermissionManager'
 import RoleManager from '@/components/admin/RoleManager'
@@ -115,6 +115,85 @@ export default function AdminPage() {
               <p className="text-gray-600">
                 Bienvenido, {profile?.full_name}. Desde aquí puedes gestionar todo el sistema.
               </p>
+            </div>
+
+            {/* Estadísticas Administrativas */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-card rounded-lg border p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Personal Activo
+                    </p>
+                    <p className="text-2xl font-bold text-foreground mt-2">
+                      24
+                    </p>
+                    <p className="text-sm mt-1 text-green-600">
+                      +2 este mes
+                    </p>
+                  </div>
+                  <div className="bg-primary/10 p-3 rounded-lg">
+                    <Users className="w-6 h-6 text-primary" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-card rounded-lg border p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Certificaciones
+                    </p>
+                    <p className="text-2xl font-bold text-foreground mt-2">
+                      12
+                    </p>
+                    <p className="text-sm mt-1 text-muted-foreground">
+                      3 categorías
+                    </p>
+                  </div>
+                  <div className="bg-primary/10 p-3 rounded-lg">
+                    <Award className="w-6 h-6 text-primary" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-card rounded-lg border p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Medallas
+                    </p>
+                    <p className="text-2xl font-bold text-foreground mt-2">
+                      8
+                    </p>
+                    <p className="text-sm mt-1 text-green-600">
+                      2 nuevas
+                    </p>
+                  </div>
+                  <div className="bg-primary/10 p-3 rounded-lg">
+                    <Medal className="w-6 h-6 text-primary" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-card rounded-lg border p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Candidatos
+                    </p>
+                    <p className="text-2xl font-bold text-foreground mt-2">
+                      5
+                    </p>
+                    <p className="text-sm mt-1 text-muted-foreground">
+                      En revisión
+                    </p>
+                  </div>
+                  <div className="bg-primary/10 p-3 rounded-lg">
+                    <UserPlus className="w-6 h-6 text-primary" />
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

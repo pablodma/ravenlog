@@ -1,26 +1,26 @@
 
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { 
-  Home, 
-  Users, 
-  Award, 
-  Medal, 
-  UserPlus, 
-  Settings, 
+import {
+  Home,
+  Users,
+  Award,
+  Medal,
+  UserPlus,
+  Settings,
   LogOut,
   Menu,
   X,
-  Plane
+  Plane,
+  User
 } from 'lucide-react'
 import { useState } from 'react'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
+  { name: 'Mi Perfil', href: '/profile', icon: User },
   { name: 'Enlistamiento', href: '/enrollment', icon: UserPlus },
   { name: 'Personal', href: '/personnel', icon: Users },
-  { name: 'Certificaciones', href: '/certifications', icon: Award },
-  { name: 'Medallero', href: '/medals', icon: Medal },
   { name: 'DCS World', href: '/dcs', icon: Plane },
 ]
 
