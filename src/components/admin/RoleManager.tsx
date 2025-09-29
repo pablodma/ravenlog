@@ -63,7 +63,7 @@ export default function RoleManager() {
       // Formatear datos para incluir conteo
       const rolesWithCount = rolesData?.map(role => ({
         ...role,
-        user_count: role.user_count?.[0]?.count || 0
+        user_count: (role as any).user_count?.[0]?.count || 0
       })) || []
 
       setRoles(rolesWithCount)
@@ -319,7 +319,7 @@ export default function RoleManager() {
                     <button
                       onClick={() => handleDelete(role)}
                       className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      disabled={role.user_count && role.user_count > 0}
+                      disabled={!!(role.user_count && role.user_count > 0)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
