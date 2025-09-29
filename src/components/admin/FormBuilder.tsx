@@ -74,9 +74,23 @@ export default function FormBuilder() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('📝 FormBuilder: handleSubmit iniciado', { form, editingForm: !!editingForm })
+    
+    // Validaciones
+    if (!form.title.trim()) {
+      toast.error('El título del formulario es obligatorio')
+      return
+    }
     
     if (form.fields.length === 0) {
       toast.error('Debe agregar al menos un campo al formulario')
+      return
+    }
+
+    // Validar que todos los campos tengan label
+    const invalidFields = form.fields.filter(field => !field.label.trim())
+    if (invalidFields.length > 0) {
+      toast.error('Todos los campos deben tener una etiqueta')
       return
     }
 
@@ -93,6 +107,7 @@ export default function FormBuilder() {
           .eq('id', editingForm.id)
 
         if (error) throw error
+        console.log('✅ FormBuilder: Formulario actualizado exitosamente')
         toast.success('Formulario actualizado exitosamente')
       } else {
         const { error } = await (supabase as any)
@@ -100,9 +115,11 @@ export default function FormBuilder() {
           .insert([formData])
 
         if (error) throw error
+        console.log('✅ FormBuilder: Formulario creado exitosamente')
         toast.success('Formulario creado exitosamente')
       }
 
+      console.log('🔄 FormBuilder: Reseteando formulario y recargando lista')
       resetForm()
       fetchForms()
     } catch (error: any) {
@@ -356,8 +373,14 @@ export default function FormBuilder() {
                           value={field.options?.join('\n') || ''}
                           onChange={(e) => updateField(index, { 
                             ...field, 
-                            options: e.target.value.split('\n').filter(opt => opt.trim()) 
+                            options: e.target.value.split('\n').filter(opt => opt.trim() !== '') 
                           })}
+                          onKeyDown={(e) => {
+                            // Permitir Enter en el textarea
+                            if (e.key === 'Enter') {
+                              e.stopPropagation();
+                            }
+                          }}
                           placeholder="Opción 1&#10;Opción 2&#10;Opción 3"
                           rows={3}
                           className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
