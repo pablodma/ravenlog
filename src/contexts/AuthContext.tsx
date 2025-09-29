@@ -44,23 +44,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         console.log('Auth state change:', event, !!session)
         
-        // Evitar procesar el mismo evento múltiples veces
-        if (event === 'INITIAL_SESSION') {
-          return // Ya procesado en getSession()
-        }
-        
         setSession(session)
         setUser(session?.user ?? null)
         
-        if (event === 'SIGNED_IN' && session?.user) {
-          console.log('Usuario logueado, obteniendo perfil...')
+        if (session?.user) {
+          // Siempre obtener perfil si hay usuario, sin importar el evento
+          console.log('Usuario encontrado en auth change, obteniendo perfil...')
           await fetchProfile(session.user.id)
-        } else if (event === 'SIGNED_OUT') {
-          console.log('Usuario deslogueado')
-          setProfile(null)
-          setLoading(false)
-        } else if (!session) {
-          console.log('Sin sesión')
+        } else {
+          console.log('Sin usuario en auth change')
           setProfile(null)
           setLoading(false)
         }
