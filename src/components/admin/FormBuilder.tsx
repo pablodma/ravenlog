@@ -94,10 +94,31 @@ export default function FormBuilder() {
       return
     }
 
+    // Validar que los campos con opciones tengan al menos una opción válida
+    const fieldsWithOptions = form.fields.filter(field => ['select', 'radio', 'checkbox'].includes(field.type))
+    const fieldsWithoutOptions = fieldsWithOptions.filter(field => 
+      !field.options || field.options.length === 0 || field.options.every(opt => !opt.trim())
+    )
+    if (fieldsWithoutOptions.length > 0) {
+      toast.error('Los campos de selección deben tener al menos una opción válida')
+      return
+    }
+
     try {
+      // Limpiar opciones vacías antes de guardar
+      const cleanedFields = form.fields.map(field => {
+        if (['select', 'radio', 'checkbox'].includes(field.type)) {
+          return {
+            ...field,
+            options: field.options?.filter(opt => opt.trim() !== '') || []
+          }
+        }
+        return field
+      })
+
       const formData = {
         ...form,
-        fields: JSON.stringify(form.fields)
+        fields: JSON.stringify(cleanedFields)
       }
 
       if (editingForm) {
@@ -190,6 +211,17 @@ export default function FormBuilder() {
 
   const updateField = (index: number, field: FormField) => {
     const newFields = [...form.fields]
+    
+    // Si se cambia a un tipo que requiere opciones y no las tiene, agregar una opción vacía
+    if (['select', 'radio', 'checkbox'].includes(field.type) && (!field.options || field.options.length === 0)) {
+      field.options = ['']
+    }
+    
+    // Si se cambia a un tipo que no requiere opciones, limpiarlas
+    if (!['select', 'radio', 'checkbox'].includes(field.type)) {
+      field.options = []
+    }
+    
     newFields[index] = field
     setForm({ ...form, fields: newFields })
   }
@@ -366,42 +398,57 @@ export default function FormBuilder() {
 
                     {['select', 'radio', 'checkbox'].includes(field.type) && (
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Opciones (una por línea)
-                        </label>
-                        <textarea
-                          value={field.options?.join('\n') || ''}
-                          onChange={(e) => updateField(index, { 
-                            ...field, 
-                            options: e.target.value.split('\n').filter(opt => opt.trim() !== '') 
-                          })}
-                          onKeyDown={(e) => {
-                            // Permitir Enter en el textarea y prevenir envío del formulario
-                            if (e.key === 'Enter') {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              // Insertar manualmente el salto de línea
-                              const target = e.target as HTMLTextAreaElement;
-                              const start = target.selectionStart;
-                              const end = target.selectionEnd;
-                              const value = target.value;
-                              const newValue = value.substring(0, start) + '\n' + value.substring(end);
-                              
-                              updateField(index, { 
-                                ...field, 
-                                options: newValue.split('\n').filter(opt => opt.trim() !== '') 
-                              });
-                              
-                              // Restaurar posición del cursor
-                              setTimeout(() => {
-                                target.selectionStart = target.selectionEnd = start + 1;
-                              }, 0);
-                            }
-                          }}
-                          placeholder="Opción 1&#10;Opción 2&#10;Opción 3"
-                          rows={3}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                        />
+                        <div className="flex justify-between items-center mb-2">
+                          <label className="block text-xs font-medium text-gray-700">
+                            Opciones
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newOptions = [...(field.options || []), '']
+                              updateField(index, { ...field, options: newOptions })
+                            }}
+                            className="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600 transition-colors flex items-center gap-1"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Agregar Opción
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {(field.options || []).map((option, optionIndex) => (
+                            <div key={optionIndex} className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={option}
+                                onChange={(e) => {
+                                  const newOptions = [...(field.options || [])]
+                                  newOptions[optionIndex] = e.target.value
+                                  updateField(index, { ...field, options: newOptions })
+                                }}
+                                placeholder={`Opción ${optionIndex + 1}`}
+                                className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newOptions = (field.options || []).filter((_, i) => i !== optionIndex)
+                                  updateField(index, { ...field, options: newOptions })
+                                }}
+                                className="text-red-500 hover:text-red-700 p-1"
+                                title="Eliminar opción"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ))}
+                          
+                          {(!field.options || field.options.length === 0) && (
+                            <div className="text-center py-4 text-gray-500 border-2 border-dashed border-gray-200 rounded">
+                              <p className="text-xs">No hay opciones. Haz clic en "Agregar Opción" para comenzar.</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
