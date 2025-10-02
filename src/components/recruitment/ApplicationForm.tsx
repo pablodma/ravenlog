@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from 'react'
 import { Save, Send, FileText, AlertCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -75,6 +77,7 @@ export default function ApplicationForm() {
         .from('applications')
         .select('*')
         .eq('applicant_id', profile?.id)
+        .in('status', ['pending', 'in_review', 'approved'])
         .order('created_at', { ascending: false })
         .limit(1)
         .single()
@@ -144,7 +147,7 @@ export default function ApplicationForm() {
           .insert([applicationData])
 
         if (error) throw error
-        toast.success('Aplicación enviada exitosamente')
+        toast.success('¡Aplicación enviada exitosamente! Será revisada pronto.')
       }
 
       checkExistingApplication()
@@ -266,11 +269,11 @@ export default function ApplicationForm() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'pending': return 'Pendiente'
+      case 'pending': return 'Pendiente de Revisión'
       case 'in_review': return 'En Revisión'
-      case 'approved': return 'Aprobado'
+      case 'approved': return 'Aprobado - En Proceso'
       case 'rejected': return 'Rechazado'
-      case 'processed': return 'Procesado'
+      case 'processed': return 'Procesado - ¡Bienvenido al Personal!'
       default: return status
     }
   }
@@ -296,6 +299,60 @@ export default function ApplicationForm() {
     )
   }
 
+  // Si ya hay una solicitud en proceso que NO es pending
+  if (existingApplication && !['pending', 'rejected'].includes(existingApplication.status)) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white p-6 rounded-lg border shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <AlertCircle className="h-8 w-8 text-blue-600" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900">Tu solicitud está siendo procesada</h3>
+              <div className="flex items-center gap-2 mt-2">
+                <span className={`text-sm px-3 py-1 rounded-full font-medium ${getStatusColor(existingApplication.status)}`}>
+                  {getStatusText(existingApplication.status)}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t pt-4 mt-4">
+            <p className="text-sm text-gray-600 mb-2">
+              <strong>Fecha de envío:</strong> {new Date(existingApplication.created_at).toLocaleString('es-ES')}
+            </p>
+            {existingApplication.reviewed_at && (
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>Fecha de revisión:</strong> {new Date(existingApplication.reviewed_at).toLocaleString('es-ES')}
+              </p>
+            )}
+            {existingApplication.review_notes && (
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm font-medium text-gray-900 mb-1">Notas del revisor:</p>
+                <p className="text-sm text-gray-700">{existingApplication.review_notes}</p>
+              </div>
+            )}
+          </div>
+
+          {existingApplication.status === 'approved' && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-800">
+                ¡Felicitaciones! Tu solicitud ha sido aprobada. Un administrador te asignará un rango y unidad pronto.
+              </p>
+            </div>
+          )}
+
+          {existingApplication.status === 'processed' && (
+            <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+              <p className="text-sm text-purple-800">
+                ¡Bienvenido al equipo! Tu solicitud ha sido procesada completamente. Ya eres parte del personal activo.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -304,25 +361,34 @@ export default function ApplicationForm() {
       </div>
 
       {/* Estado de aplicación existente */}
-      {existingApplication && (
-        <div className="bg-white p-4 rounded-lg border shadow-sm">
+      {existingApplication && existingApplication.status === 'rejected' && (
+        <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
           <div className="flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-blue-600" />
+            <AlertCircle className="h-5 w-5 text-red-600" />
             <div className="flex-1">
-              <h3 className="font-medium text-gray-900">Estado de tu aplicación</h3>
-              <div className="flex items-center gap-2 mt-1">
-                <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(existingApplication.status)}`}>
-                  {getStatusText(existingApplication.status)}
-                </span>
-                <span className="text-sm text-gray-500">
-                  Enviada el {new Date(existingApplication.created_at).toLocaleDateString()}
-                </span>
-              </div>
+              <h3 className="font-medium text-red-900">Solicitud Anterior Rechazada</h3>
+              <p className="text-sm text-red-700 mt-1">
+                Tu solicitud anterior fue rechazada. Puedes enviar una nueva aplicación.
+              </p>
               {existingApplication.review_notes && (
-                <p className="text-sm text-gray-600 mt-2">
-                  <strong>Notas:</strong> {existingApplication.review_notes}
+                <p className="text-sm text-red-700 mt-2">
+                  <strong>Motivo:</strong> {existingApplication.review_notes}
                 </p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {existingApplication && existingApplication.status === 'pending' && (
+        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-yellow-600" />
+            <div className="flex-1">
+              <h3 className="font-medium text-yellow-900">Tienes una solicitud pendiente</h3>
+              <p className="text-sm text-yellow-700 mt-1">
+                Puedes actualizar tu solicitud antes de que sea revisada.
+              </p>
             </div>
           </div>
         </div>
@@ -356,21 +422,17 @@ export default function ApplicationForm() {
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
                   <Save className="h-4 w-4" />
-                  {submitting ? 'Guardando...' : 'Actualizar Aplicación'}
+                  {submitting ? 'Guardando...' : 'Actualizar Solicitud'}
                 </button>
-              ) : !existingApplication || existingApplication.status === 'rejected' ? (
+              ) : (
                 <button
                   type="submit"
                   disabled={submitting}
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />
-                  {submitting ? 'Enviando...' : 'Enviar Aplicación'}
+                  {submitting ? 'Enviando...' : 'Enviar Solicitud'}
                 </button>
-              ) : (
-                <div className="text-sm text-gray-500">
-                  No puedes modificar una aplicación que ya está siendo procesada.
-                </div>
               )}
             </div>
           </form>

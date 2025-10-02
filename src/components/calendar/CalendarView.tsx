@@ -4,7 +4,7 @@ import { CalendarService, FlightEvent, EventType } from '../../services/calendar
 // import { usePermissions } from '../../hooks/usePermissions';
 import PermissionGuard from '../auth/PermissionGuard';
 import { EventCard } from './EventCard';
-import { CreateEventModal } from './CreateEventModal';
+import CreateEventModalEnhanced from './CreateEventModalEnhanced';
 
 interface CalendarViewProps {
   className?: string;
@@ -387,8 +387,7 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
 
       {/* Modal de crear evento */}
       {showCreateModal && (
-        <CreateEventModal
-          eventTypes={eventTypes}
+        <CreateEventModalEnhanced
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);

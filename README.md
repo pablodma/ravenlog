@@ -17,10 +17,13 @@
 - **Perfiles de usuario** con información completa
 
 ### 👥 **Gestión de Personal**
-- **Proceso de enlistamiento** con formularios dinámicos
-- **Nómina de personal** con rangos y unidades
+- **Proceso de enlistamiento** con formularios dinámicos personalizables
+- **Roster de personal** completo con rangos, unidades y posiciones
+- **Grupos y unidades** organizacionales jerárquicas
+- **Posiciones de combate** específicas por unidad
 - **Estados de aviador** (activo, inactivo, licencia, dado de baja)
-- **Asignación de callsigns** y unidades de vuelo
+- **Especialidades y calificaciones** asignables
+- **Sistema de records** para historial completo de personal
 
 ### 🏅 **Sistema de Reconocimientos**
 - **Medallas y condecoraciones** personalizables
@@ -36,40 +39,44 @@
 - **Historial de vuelos** completo
 
 ### 📅 **Calendario de Eventos**
-- **Eventos de vuelo** programables
-- **Sistema RSVP** para participación
-- **8 tipos de eventos** predefinidos (Combate, BVR, BFM, CAS, SEAD, etc.)
-- **Gestión de participantes** con roles
-- **Briefing y debrief** integrados
-- **Configuración de servidor** DCS
+- **Eventos de vuelo** programables con editor rico
+- **Eventos recurrentes** (diario, semanal, mensual)
+- **Sistema de registro** con límites de participantes
+- **Múltiples calendarios** categorizados
+- **Tipos de eventos** personalizables
+- **Gestión de participantes** con comentarios
+- **Briefing, debrief y configuración** de servidor
 
 ### ⚙️ **Administración**
-- **Panel de control** completo
-- **Gestión de roles y permisos** granular
-- **Creador de formularios** dinámicos
-- **Procesamiento de candidatos** automatizado
-- **Estadísticas administrativas**
+- **Panel organizacional** completo (grupos, unidades, posiciones, rangos)
+- **Gestión de usuarios** con perfiles detallados
+- **Sistema de formularios** dinámicos (enlistamiento, ausencias)
+- **Procesamiento unificado** de solicitudes
+- **Sistema de records** (asignaciones, premios, combate, rangos, servicio)
+- **Especialidades y calificaciones** personalizables
+- **Estados y medallas** configurables
 
 ## 🛠️ **Stack Tecnológico**
 
 ### **Frontend**
-- **React 18** con TypeScript
-- **Vite** para build y desarrollo
-- **TailwindCSS** para estilos
+- **Next.js 14** con App Router y TypeScript
+- **React 18** con Server Components
+- **TailwindCSS** para estilos con tema dark militar
 - **Lucide React** para iconografía
-- **React Router DOM** para navegación
-- **TanStack Query** para gestión de estado
+- **React Query** para gestión de estado y caching
 
 ### **Backend**
 - **Supabase** como BaaS
 - **PostgreSQL** con RLS (Row Level Security)
-- **Supabase Auth** para autenticación
+- **Supabase Auth** para autenticación (Email + Magic Link)
 - **Real-time subscriptions**
+- **Edge Functions** (próximamente)
 
 ### **Infraestructura**
-- **Vercel** para hosting y CI/CD
+- **Vercel** para hosting con Edge Runtime
 - **GitHub** para control de versiones
 - **Supabase Cloud** para base de datos
+- **CI/CD** automático en cada push
 
 ## 🚀 **Instalación y Desarrollo**
 
@@ -94,44 +101,60 @@ npm install
 
 3. **Configurar variables de entorno**
 ```bash
-# Crear archivo .env con las siguientes variables:
-VITE_SUPABASE_URL=tu_supabase_url
-VITE_SUPABASE_ANON_KEY=tu_supabase_anon_key
+# Crear archivo .env.local con las siguientes variables:
+NEXT_PUBLIC_SUPABASE_URL=tu_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_supabase_anon_key
 ```
 
 4. **Ejecutar migraciones de base de datos**
-- Ejecutar los archivos SQL en `supabase/migrations/` en orden
+- Ejecutar los archivos SQL en `supabase/migrations/` en orden numérico
 - Aplicar los datos semilla desde `supabase/seed.sql`
 
 5. **Iniciar desarrollo**
 ```bash
 npm run dev
 ```
+La aplicación estará disponible en `http://localhost:3000`
 
 ### **Build de Producción**
 ```bash
 npm run build
+npm run start
 ```
 
 ## 📋 **Estructura del Proyecto**
 
 ```
 ravenlog/
+├── app/                    # Next.js App Router
+│   ├── admin/             # Panel administrativo
+│   ├── auth/              # Rutas de autenticación
+│   ├── calendar/          # Sistema de calendario
+│   ├── dcs/               # Análisis de logs DCS
+│   ├── enrollment/        # Proceso de enlistamiento
+│   ├── forms/             # Gestión de formularios
+│   ├── profile/           # Perfil de usuario
+│   ├── records/           # Sistema de records
+│   ├── roster/            # Roster de personal
+│   └── dashboard/         # Dashboard principal
 ├── src/
-│   ├── components/          # Componentes React
-│   │   ├── admin/          # Panel administrativo
-│   │   ├── auth/           # Autenticación y permisos
-│   │   ├── calendar/       # Sistema de calendario
-│   │   ├── dcs/            # Análisis de logs DCS
-│   │   └── recruitment/    # Sistema de enlistamiento
-│   ├── contexts/           # Contextos de React
-│   ├── hooks/              # Hooks personalizados
-│   ├── pages/              # Páginas principales
-│   ├── services/           # Servicios de API
-│   └── utils/              # Utilidades
-├── shared/                 # Tipos y esquemas compartidos
-├── supabase/              # Migraciones y configuración DB
-└── public/                # Archivos estáticos
+│   ├── components/        # Componentes React
+│   │   ├── admin/        # Componentes administrativos
+│   │   ├── auth/         # Autenticación
+│   │   ├── calendar/     # Calendario
+│   │   ├── dcs/          # DCS World
+│   │   ├── forms/        # Formularios
+│   │   ├── records/      # Records
+│   │   ├── roster/       # Roster
+│   │   └── ui/           # Componentes UI
+│   ├── contexts/         # Contextos React
+│   ├── hooks/            # Hooks personalizados
+│   ├── lib/              # Utilidades y configuración
+│   └── services/         # Servicios de API
+├── supabase/             # Migraciones y configuración DB
+│   └── migrations/       # Migraciones SQL ordenadas
+├── shared/               # Tipos y esquemas compartidos
+└── public/               # Archivos estáticos
 ```
 
 ## 🔧 **Configuración de Producción**
@@ -150,8 +173,8 @@ ravenlog/
 
 ### **Variables de Entorno Requeridas**
 ```env
-VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
-VITE_SUPABASE_ANON_KEY=tu_clave_anonima
+NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima
 ```
 
 ## 👥 **Roles y Permisos**
@@ -217,19 +240,21 @@ VITE_SUPABASE_ANON_KEY=tu_clave_anonima
 ## 🚀 **Roadmap**
 
 ### **Próximas Funcionalidades**
+- [ ] Sistema de notificaciones push
 - [ ] Integración con Discord
-- [ ] Sistema de notificaciones
-- [ ] Reportes avanzados
-- [ ] API pública
-- [ ] Aplicación móvil
-- [ ] Integración con SRS
+- [ ] Reportes avanzados y exportación
+- [ ] API pública REST
+- [ ] Sistema de misiones y briefings
+- [ ] Integración con SRS/SimpleRadio
+- [ ] Chat interno
 
 ### **Mejoras Técnicas**
-- [ ] Optimización de performance
-- [ ] Tests automatizados
-- [ ] Documentación API
-- [ ] Monitoreo y logging
-- [ ] Backup automatizado
+- [x] Optimización de performance con React Query
+- [ ] Tests automatizados (Jest + Playwright)
+- [ ] Documentación completa de API
+- [ ] Monitoreo con Sentry
+- [ ] Backup automatizado de BD
+- [ ] Edge Functions para procesamiento
 
 ## 🤝 **Contribuir**
 
@@ -241,6 +266,18 @@ VITE_SUPABASE_ANON_KEY=tu_clave_anonima
 
 ## 📝 **Changelog**
 
+### **v2.0.0** (2025-02-02)
+- ✅ Migración completa a Next.js 14
+- ✅ Dark mode militar profesional
+- ✅ Sistema de organización completo (grupos, unidades, posiciones)
+- ✅ Roster de personal con filtros y agrupación
+- ✅ Sistema de formularios dinámicos
+- ✅ Sistema de records para historial de personal
+- ✅ Especialidades, calificaciones y estados
+- ✅ Eventos recurrentes y sistema de registro
+- ✅ Optimización de rendimiento y caching
+- ✅ Componentes reutilizables y tema unificado
+
 ### **v1.1.1** (2025-01-29)
 - ✅ Sistema de calendario completo
 - ✅ Gestión de eventos de vuelo
@@ -250,7 +287,7 @@ VITE_SUPABASE_ANON_KEY=tu_clave_anonima
 
 ### **v1.0.0** (2025-01-28)
 - ✅ Sistema base completo
-- ✅ Autenticación Google OAuth
+- ✅ Autenticación con Email + Magic Link
 - ✅ RBAC dinámico
 - ✅ Análisis de logs DCS
 - ✅ Sistema de medallas y certificaciones

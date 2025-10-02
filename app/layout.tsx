@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { Toaster } from 'react-hot-toast'
+import QueryProvider from '@/providers/QueryProvider'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -18,9 +19,10 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={inter.className}>
-        <AuthProvider>
-          {children}
-          <Toaster
+        <QueryProvider>
+          <AuthProvider>
+            {children}
+            <Toaster
             position="top-right"
             toastOptions={{
               duration: 4000,
@@ -44,7 +46,8 @@ export default function RootLayout({
               },
             }}
           />
-        </AuthProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   )

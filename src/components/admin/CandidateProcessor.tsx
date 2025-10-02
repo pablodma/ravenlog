@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from 'react'
 import { User, Award, Star, Plane, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'

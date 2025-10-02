@@ -1,3 +1,5 @@
+'use client'
+
 import { ReactNode } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Shield } from 'lucide-react'
@@ -53,3 +55,5 @@ export function RoleCheck({ roles, children }: Omit<RoleGuardProps, 'fallback'>)
 
   return <>{children}</>
 }
+
+

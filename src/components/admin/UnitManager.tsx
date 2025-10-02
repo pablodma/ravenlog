@@ -11,8 +11,14 @@ interface Unit {
   callsign: string | null
   image_url: string | null
   max_personnel: number
+  group_id: string | null
   created_at: string
   personnel_count?: number
+  group?: {
+    id: string
+    name: string
+    color: string
+  }
 }
 
 interface UnitForm {
@@ -22,6 +28,14 @@ interface UnitForm {
   callsign: string
   image_url: string
   max_personnel: number
+  group_id: string | null
+}
+
+interface Group {
+  id: string
+  name: string
+  color: string
+  display_order: number
 }
 
 const UNIT_TYPES = [
@@ -34,6 +48,7 @@ const UNIT_TYPES = [
 
 export default function UnitManager() {
   const [units, setUnits] = useState<Unit[]>([])
+  const [groups, setGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null)
@@ -44,21 +59,39 @@ export default function UnitManager() {
     unit_type: 'squadron',
     callsign: '',
     image_url: '',
-    max_personnel: 50
+    max_personnel: 50,
+    group_id: null
   })
 
   useEffect(() => {
+    fetchGroups()
     fetchUnits()
   }, [])
 
+  const fetchGroups = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('groups')
+        .select('id, name, color, display_order')
+        .eq('is_active', true)
+        .order('display_order')
+
+      if (error) throw error
+      setGroups(data || [])
+    } catch (error) {
+      console.error('Error fetching groups:', error)
+    }
+  }
+
   const fetchUnits = async () => {
     try {
-      // Obtener unidades con conteo de personal
+      // Obtener unidades con conteo de personal y grupo
       const { data: unitsData, error } = await (supabase as any)
         .from('units')
         .select(`
           *,
-          personnel_count:profiles(count)
+          personnel_count:profiles(count),
+          group:groups(id, name, color)
         `)
         .order('name')
 
@@ -155,7 +188,8 @@ export default function UnitManager() {
       unit_type: unit.unit_type,
       callsign: unit.callsign || '',
       image_url: unit.image_url || '',
-      max_personnel: unit.max_personnel
+      max_personnel: unit.max_personnel,
+      group_id: unit.group_id || null
     })
     setShowForm(true)
   }
@@ -184,7 +218,7 @@ export default function UnitManager() {
   }
 
   const resetForm = () => {
-    setForm({ name: '', description: '', unit_type: 'squadron', callsign: '', image_url: '', max_personnel: 50 })
+    setForm({ name: '', description: '', unit_type: 'squadron', callsign: '', image_url: '', max_personnel: 50, group_id: null })
     setEditingUnit(null)
     setShowForm(false)
   }
@@ -261,15 +295,20 @@ export default function UnitManager() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Callsign
+                  Grupo
                 </label>
-                <input
-                  type="text"
-                  value={form.callsign}
-                  onChange={(e) => setForm({ ...form, callsign: e.target.value })}
-                  placeholder="ej: VIPER, EAGLE, FALCON"
+                <select
+                  value={form.group_id || ''}
+                  onChange={(e) => setForm({ ...form, group_id: e.target.value || null })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                >
+                  <option value="">Sin grupo asignado</option>
+                  {groups.map(group => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -286,6 +325,19 @@ export default function UnitManager() {
                   required
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Callsign
+              </label>
+              <input
+                type="text"
+                value={form.callsign}
+                onChange={(e) => setForm({ ...form, callsign: e.target.value })}
+                placeholder="ej: VIPER, EAGLE, FALCON"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
 
             <div>
@@ -366,6 +418,21 @@ export default function UnitManager() {
                 <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded capitalize">
                   {unit.unit_type}
                 </span>
+                {unit.group && (
+                  <span 
+                    className="text-xs px-2 py-1 rounded flex items-center gap-1"
+                    style={{ 
+                      backgroundColor: `${unit.group.color}20`,
+                      color: unit.group.color
+                    }}
+                  >
+                    <div 
+                      className="w-2 h-2 rounded-full" 
+                      style={{ backgroundColor: unit.group.color }}
+                    />
+                    {unit.group.name}
+                  </span>
+                )}
               </div>
               <p className="text-sm text-gray-600 mb-2">{unit.description}</p>
               <div className="flex items-center gap-4 text-xs text-gray-500">

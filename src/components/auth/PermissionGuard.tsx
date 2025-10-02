@@ -1,3 +1,5 @@
+'use client'
+
 import { ReactNode } from 'react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { Lock } from 'lucide-react'
@@ -87,3 +89,5 @@ export function PermissionCheck({
 
   return <>{children}</>
 }
+
+

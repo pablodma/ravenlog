@@ -2,17 +2,234 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Mantener estilos existentes */
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  :root {
+    /* Military/Aviation Dark Theme - Professional Navy Blues */
+    --background: 222 47% 11%;           /* #0F172A - Deep navy base */
+    --foreground: 210 40% 98%;           /* #F8FAFC - Crisp white text */
+    
+    --card: 217 33% 17%;                 /* #1E293B - Card navy */
+    --card-foreground: 210 40% 98%;      /* #F8FAFC */
+    
+    --popover: 217 33% 17%;              /* #1E293B */
+    --popover-foreground: 210 40% 98%;   /* #F8FAFC */
+    
+    --primary: 217 91% 60%;              /* #3B82F6 - Steel blue accent */
+    --primary-foreground: 222 47% 11%;   /* #0F172A */
+    
+    --secondary: 215 25% 27%;            /* #334155 - Muted steel */
+    --secondary-foreground: 210 40% 98%; /* #F8FAFC */
+    
+    --muted: 215 25% 27%;                /* #334155 - Subtle backgrounds */
+    --muted-foreground: 215 16% 47%;     /* #64748B - Muted text */
+    
+    --accent: 217 91% 60%;               /* #3B82F6 - Interactive elements */
+    --accent-foreground: 222 47% 11%;    /* #0F172A */
+    
+    --destructive: 0 84% 60%;            /* #EF4444 - Alerts/danger */
+    --destructive-foreground: 210 40% 98%; /* #F8FAFC */
+    
+    --border: 215 25% 27%;               /* #334155 - Borders */
+    --input: 215 25% 27%;                /* #334155 - Input borders */
+    --ring: 217 91% 60%;                 /* #3B82F6 - Focus rings */
+    
+    --radius: 0.5rem;                    /* Rounded borders */
+  }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+      monospace;
+  }
+}
+
+@layer components {
+  /* Military/Aviation Button Styles */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground rounded-lg px-4 py-2 font-medium;
+    @apply hover:bg-primary/90 transition-colors;
+    @apply border border-primary/20;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground rounded-lg px-4 py-2 font-medium;
+    @apply hover:bg-secondary/90 transition-colors;
+    @apply border border-border;
+  }
+  
+  .btn-ghost {
+    @apply bg-transparent text-muted-foreground rounded-lg px-4 py-2 font-medium;
+    @apply hover:bg-muted hover:text-foreground transition-colors;
+  }
+  
+  /* Card Styles */
+  .card {
+    @apply bg-card text-card-foreground rounded-lg border border-border;
+    @apply shadow-lg;
+  }
+  
+  /* Input Styles */
+  .input {
+    @apply bg-background text-foreground rounded-lg px-3 py-2;
+    @apply border border-input;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
+    @apply placeholder:text-muted-foreground;
+  }
+  
+  /* Table Styles */
+  .table-header {
+    @apply bg-muted/50 text-muted-foreground uppercase text-xs font-medium tracking-wider;
+    @apply border-b border-border;
+  }
+  
+  .table-row {
+    @apply hover:bg-muted/30 transition-colors;
+    @apply border-b border-border/50;
+  }
+  
+  /* Badge Styles */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+    @apply border;
+  }
+  
+  .badge-primary {
+    @apply bg-primary/10 text-primary border-primary/20;
+  }
+  
+  .badge-success {
+    @apply bg-green-500/10 text-green-400 border-green-500/20;
+  }
+  
+  .badge-warning {
+    @apply bg-yellow-500/10 text-yellow-400 border-yellow-500/20;
+  }
+  
+  .badge-danger {
+    @apply bg-destructive/10 text-destructive border-destructive/20;
+  }
+  
+  /* Status Indicators */
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+  
+  .status-online {
+    @apply bg-green-500;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+  }
+  
+  .status-offline {
+    @apply bg-gray-500;
+  }
+  
+  /* Scrollbar Styling - Military Theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground;
+  }
+  
+  /* Selection */
+  ::selection {
+    @apply bg-primary/30 text-foreground;
+  }
+  
+  /* Tab Navigation */
+  .tab-button {
+    @apply py-3 px-4 text-sm font-medium border-b-2 transition-colors;
+  }
+  
+  .tab-button-active {
+    @apply border-primary text-primary;
+  }
+  
+  .tab-button-inactive {
+    @apply border-transparent text-muted-foreground hover:text-foreground hover:border-muted;
+  }
+  
+  /* Sidebar Navigation */
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all;
+  }
+  
+  .nav-item-active {
+    @apply bg-primary/10 text-primary border border-primary/20;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+  }
+  
+  .nav-item-inactive {
+    @apply text-muted-foreground hover:bg-muted/50 hover:text-foreground;
+  }
+  
+  /* Modal Overlay */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50;
+  }
+  
+  .modal-content {
+    @apply bg-card rounded-lg shadow-2xl border border-border/50;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Divider */
+  .divider {
+    @apply border-t border-border my-4;
+  }
+  
+  /* Focus visible - accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-in;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
 }

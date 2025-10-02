@@ -27,7 +27,9 @@
     "build": "npm run build:shared && next build",
     "build:shared": "cd shared && npm install && npm run build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean-users": "node scripts/clean-users.js",
+    "clean-users:powershell": "powershell -ExecutionPolicy Bypass -File scripts/clean-users.ps1"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
@@ -37,6 +39,7 @@
     "@types/formidable": "^3.4.5",
     "clsx": "^2.1.1",
     "date-fns": "^2.30.0",
+    "dotenv": "^17.2.3",
     "formidable": "^3.5.4",
     "lucide-react": "^0.292.0",
     "next": "^15.5.4",
