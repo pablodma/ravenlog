@@ -2,7 +2,7 @@
 
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import DashboardLayout from '@/components/DashboardLayout'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 // Imports removidos ya que no se usan los iconos en el menú interno
 import AssignmentRecordsManager from '@/components/records/AssignmentRecordsManager'
@@ -29,7 +29,7 @@ const recordsSections = [
   { id: 'service' as const, name: 'Servicio' },
 ]
 
-export default function RecordsPage() {
+function RecordsContent() {
   const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState<RecordsSection>('assignments')
 
@@ -60,11 +60,19 @@ export default function RecordsPage() {
   }
 
   return (
+    <div>
+      {renderContent()}
+    </div>
+  )
+}
+
+export default function RecordsPage() {
+  return (
     <ProtectedRoute>
       <DashboardLayout>
-        <div>
-          {renderContent()}
-        </div>
+        <Suspense fallback={<div className="flex items-center justify-center p-8">Cargando...</div>}>
+          <RecordsContent />
+        </Suspense>
       </DashboardLayout>
     </ProtectedRoute>
   )
