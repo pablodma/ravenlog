@@ -58,9 +58,22 @@ export default function LoginPage() {
           break
 
         case 'reset-password':
-          await resetPassword(formData.email)
-          toast.success('¡Email de recuperación enviado! Revisa tu bandeja de entrada.')
-          setMode('signin')
+          try {
+            await resetPassword(formData.email)
+            toast.success('¡Email de recuperación enviado! Revisa tu bandeja de entrada. El enlace es válido por 1 hora.')
+            setMode('signin')
+          } catch (error: any) {
+            console.error('Error en reset password:', error)
+            // Fallback: intentar con magic link
+            toast.error('Error enviando email de recuperación. Intentando con enlace mágico...')
+            try {
+              await signInWithMagicLink(formData.email)
+              toast.success('¡Enlace mágico enviado! Revisa tu email.')
+              setMode('signin')
+            } catch (magicError: any) {
+              toast.error('Error: ' + (magicError.message || 'No se pudo enviar el email'))
+            }
+          }
           break
       }
     } catch (error: any) {

@@ -187,13 +187,13 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
       days.push(
         <div
           key={i}
-          className={`min-h-[120px] border border-gray-200 p-2 ${
-            isCurrentMonth ? 'bg-white' : 'bg-gray-50'
-          } ${isToday ? 'bg-blue-50 border-blue-300' : ''}`}
+          className={`min-h-[120px] border border-border p-2 ${
+            isCurrentMonth ? 'bg-card' : 'bg-muted/30'
+          } ${isToday ? 'bg-primary/10 border-primary' : ''}`}
         >
           <div className={`text-sm font-medium mb-1 ${
-            isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
-          } ${isToday ? 'text-blue-600' : ''}`}>
+            isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'
+          } ${isToday ? 'text-primary' : ''}`}>
             {date.getDate()}
           </div>
           <div className="space-y-1">
@@ -208,7 +208,7 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
               </div>
             ))}
             {dayEvents.length > 3 && (
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 +{dayEvents.length - 3} más
               </div>
             )}
@@ -218,10 +218,10 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
     }
 
     return (
-      <div className="grid grid-cols-7 gap-0 border border-gray-200 rounded-lg overflow-hidden">
+      <div className="grid grid-cols-7 gap-0 border border-border rounded-lg overflow-hidden">
         {/* Encabezados de días */}
         {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(day => (
-          <div key={day} className="bg-gray-100 p-3 text-center text-sm font-medium text-gray-700 border-b border-gray-200">
+          <div key={day} className="bg-muted p-3 text-center text-sm font-medium text-muted-foreground border-b border-border">
             {day}
           </div>
         ))}
@@ -241,17 +241,17 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
     if (filteredEvents.length === 0) {
       return (
         <div className="text-center py-12">
-          <Calendar className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No hay eventos</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-2 text-sm font-medium text-foreground">No hay eventos</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
             {eventTypes.length === 0 
               ? 'El módulo de calendario no está configurado. Ejecuta el script SQL de migración.'
               : 'No se encontraron eventos para el período seleccionado.'
             }
           </p>
           {eventTypes.length === 0 && (
-            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg max-w-md mx-auto">
-              <p className="text-sm text-yellow-800">
+            <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg max-w-md mx-auto">
+              <p className="text-sm text-yellow-600">
                 <strong>Instrucciones:</strong><br/>
                 1. Ve al SQL Editor de Supabase<br/>
                 2. Ejecuta el script <code>create_calendar_tables_simple.sql</code><br/>
@@ -279,7 +279,7 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
   if (loading) {
     return (
       <div className={`flex items-center justify-center h-64 ${className}`}>
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -287,12 +287,12 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
   if (error) {
     return (
       <div className={`text-center py-12 ${className}`}>
-        <div className="text-red-600 mb-2">⚠️</div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Error</h3>
-        <p className="text-gray-600">{error}</p>
+        <div className="text-destructive mb-2">⚠️</div>
+        <h3 className="text-lg font-medium text-foreground mb-2">Error</h3>
+        <p className="text-muted-foreground">{error}</p>
         <button
           onClick={loadData}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
         >
           Reintentar
         </button>
@@ -305,20 +305,20 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-gray-900">Calendario de Eventos</h1>
+          <h1 className="text-2xl font-bold text-foreground">Calendario de Eventos</h1>
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigateDate('prev')}
-              className="p-2 text-gray-400 hover:text-gray-600"
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
-            <h2 className="text-lg font-medium text-gray-900 min-w-[200px] text-center">
+            <h2 className="text-lg font-medium text-foreground min-w-[200px] text-center">
               {getDateTitle()}
             </h2>
             <button
               onClick={() => navigateDate('next')}
-              className="p-2 text-gray-400 hover:text-gray-600"
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
@@ -328,11 +328,11 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
         <div className="flex items-center gap-2">
           {/* Filtros */}
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-400" />
+            <Filter className="h-4 w-4 text-muted-foreground" />
             <select
               value={selectedFilters.status || ''}
               onChange={(e) => setSelectedFilters(prev => ({ ...prev, status: e.target.value || undefined }))}
-              className="text-sm border border-gray-300 rounded-md px-2 py-1"
+              className="text-sm border border-input rounded-md px-2 py-1 bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-transparent"
             >
               <option value="">Todos los estados</option>
               <option value="scheduled">Programado</option>
@@ -343,7 +343,7 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
             <select
               value={selectedFilters.eventType || ''}
               onChange={(e) => setSelectedFilters(prev => ({ ...prev, eventType: e.target.value || undefined }))}
-              className="text-sm border border-gray-300 rounded-md px-2 py-1"
+              className="text-sm border border-input rounded-md px-2 py-1 bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-transparent"
             >
               <option value="">Todos los tipos</option>
               {eventTypes.map(type => (
@@ -353,16 +353,16 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
           </div>
 
           {/* Selector de vista */}
-          <div className="flex border border-gray-300 rounded-md">
+          <div className="flex border border-input rounded-md overflow-hidden">
             {(['month', 'week', 'day'] as const).map((mode) => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
-                className={`px-3 py-1 text-sm ${
+                className={`px-3 py-1 text-sm transition-colors ${
                   viewMode === mode
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-50'
-                } ${mode === 'month' ? 'rounded-l-md' : mode === 'day' ? 'rounded-r-md' : ''}`}
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
               >
                 {mode === 'month' ? 'Mes' : mode === 'week' ? 'Semana' : 'Día'}
               </button>
@@ -373,7 +373,7 @@ export function CalendarView({ className = '' }: CalendarViewProps) {
           <PermissionGuard permission="events.create">
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
               <Plus className="h-4 w-4" />
               Nuevo Evento

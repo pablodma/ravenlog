@@ -50,34 +50,83 @@ export function usePermissions() {
     try {
       setLoading(true)
       
-      // Sistema de permisos basado en rol simple (fallback)
-      let userPermissions: string[] = []
-      
-      switch (profile?.role) {
-        case 'admin':
-          // Admin tiene todos los permisos
-          userPermissions = ['*'] // Wildcard para todos los permisos
-          break
-        case 'personnel':
-          userPermissions = [
-            'events.respond',
-            'logs.view_all'
-          ]
-          break
-        case 'candidate':
-          userPermissions = []
-          break
-        default:
-          userPermissions = []
+      // Obtener permisos desde la base de datos
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select(`
+          role_id,
+          roles!inner(
+            name,
+            role_permissions(
+              permissions!inner(
+                name,
+                description,
+                category,
+                action,
+                resource
+              )
+            )
+          )
+        `)
+        .eq('user_id', profile?.id)
+        .eq('is_active', true)
+        .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
+
+      if (rolesError) {
+        console.error('Error fetching user roles:', rolesError)
+        // Fallback al sistema simple
+        await fetchUserPermissionsByRoleFallback()
+        return
       }
+
+      const userPermissions: string[] = []
+      
+      userRoles?.forEach(userRole => {
+        const role = userRole.roles
+        if (role?.name === 'Admin') {
+          // Admin tiene todos los permisos
+          userPermissions.push('*')
+        } else {
+          // Agregar permisos específicos del rol
+          role?.role_permissions?.forEach((rp: any) => {
+            if (rp.permissions?.name) {
+              userPermissions.push(rp.permissions.name)
+            }
+          })
+        }
+      })
       
       setPermissions(userPermissions)
     } catch (error) {
       console.error('Error fetching user permissions by role:', error)
-      setPermissions([])
+      await fetchUserPermissionsByRoleFallback()
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchUserPermissionsByRoleFallback = async () => {
+    // Sistema de permisos basado en rol simple (fallback)
+    let userPermissions: string[] = []
+    
+    switch (profile?.role) {
+      case 'admin':
+        // Admin tiene todos los permisos
+        userPermissions = ['*'] // Wildcard para todos los permisos
+        break
+      case 'user':
+        userPermissions = [
+          'user.profile',
+          'user.forms',
+          'user.events',
+          'user.records'
+        ]
+        break
+      default:
+        userPermissions = []
+    }
+    
+    setPermissions(userPermissions)
   }
 
   const hasPermission = (permission: string): boolean => {
@@ -102,11 +151,27 @@ export function usePermissions() {
   }
 
   const getUserRole = () => {
-    return profile?.role || 'candidate'
+    return profile?.role || 'user'
   }
 
   const isAdmin = () => {
-    return profile?.role === 'admin'
+    return profile?.role === 'admin' || permissions.includes('*')
+  }
+
+  const isUser = () => {
+    return profile?.role === 'user'
+  }
+
+  const canManageUsers = () => {
+    return hasPermission('admin.users')
+  }
+
+  const canManageRoles = () => {
+    return hasPermission('admin.roles')
+  }
+
+  const canManageSettings = () => {
+    return hasPermission('admin.settings')
   }
 
   return {
@@ -117,6 +182,10 @@ export function usePermissions() {
     hasAllPermissions,
     getUserRole,
     isAdmin,
+    isUser,
+    canManageUsers,
+    canManageRoles,
+    canManageSettings,
     refetch: fetchUserPermissions
   }
 }

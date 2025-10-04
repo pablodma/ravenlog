@@ -28,6 +28,30 @@ export function useActiveForms() {
   })
 }
 
+// Obtener formularios de reclutamiento específicamente
+export function useRecruitmentForms() {
+  return useQuery({
+    queryKey: ['recruitment-forms', 'recruitment'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('recruitment_forms')
+        .select('*')
+        .eq('is_active', true)
+        .eq('form_type', 'recruitment')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      
+      // Parsear campos JSONB si vienen como string
+      return data?.map(form => ({
+        ...form,
+        fields: typeof form.fields === 'string' ? JSON.parse(form.fields) : (form.fields || []),
+      }))
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutos
+  })
+}
+
 // Obtener aplicación actual del usuario (caché: 30 segundos)
 export function useMyApplication() {
   const { profile } = useAuth()
@@ -183,11 +207,7 @@ export function useAllPositions() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('unit_positions')
-        .select(`
-          *,
-          unit:units!unit_id(name)
-        `)
-        .order('unit_id')
+        .select('*')
         .order('display_order')
 
       if (error) throw error
@@ -324,7 +344,6 @@ export function useCreatePosition() {
     mutationFn: async (position: {
       name: string
       description?: string
-      unit_id: string
       display_order?: number
       is_leadership?: boolean
       color?: string

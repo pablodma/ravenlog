@@ -37,6 +37,8 @@
   }
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @layer base {
   * {
     @apply border-border;
@@ -45,17 +47,213 @@
   body {
     @apply bg-background text-foreground;
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
       'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
   code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    font-family: 'Inter', source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
       monospace;
   }
+
+  /* Typography Variables - Centralized System */
+  :root {
+    /* Font Sizes - Based on the image specifications */
+    --text-display: 1.875rem;      /* 30px - Main page titles */
+    --text-title: 1.5rem;          /* 24px - Section titles */
+    --text-heading: 1.25rem;       /* 20px - Subsection titles */
+    --text-subheading: 1.125rem;    /* 18px - Card titles, form labels */
+    --text-label: 1rem;            /* 16px - Form labels, navigation */
+    --text-body: 1rem;              /* 16px - Body text */
+    --text-body-small: 0.875rem;   /* 14px - Small body text */
+    --text-caption: 0.75rem;       /* 12px - Captions, helper text */
+    
+    /* Font Weights */
+    --font-bold: 700;
+    --font-semibold: 600;
+    --font-medium: 500;
+    --font-normal: 400;
+    
+    /* Line Heights */
+    --line-tight: 1.2;
+    --line-snug: 1.3;
+    --line-normal: 1.4;
+    --line-relaxed: 1.5;
+    --line-loose: 1.6;
+    
+    /* Letter Spacing */
+    --tracking-tight: -0.025em;
+    --tracking-normal: 0;
+    --tracking-wide: 0.025em;
+    --tracking-wider: 0.05em;
+  }
+
+  /* Automatic Typography Application */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+    font-weight: var(--font-bold);
+    line-height: var(--line-tight);
+    letter-spacing: var(--tracking-tight);
+    color: hsl(var(--foreground));
+  }
+
+  h1 {
+    font-size: var(--text-display);
+  }
+
+  h2 {
+    font-size: var(--text-title);
+  }
+
+  h3 {
+    font-size: var(--text-heading);
+  }
+
+  h4 {
+    font-size: var(--text-subheading);
+    font-weight: var(--font-semibold);
+  }
+
+  h5 {
+    font-size: var(--text-label);
+    font-weight: var(--font-semibold);
+  }
+
+  h6 {
+    font-size: var(--text-body-small);
+    font-weight: var(--font-semibold);
+  }
+
+  p {
+    font-size: var(--text-body);
+    font-weight: var(--font-normal);
+    line-height: var(--line-loose);
+    color: hsl(var(--foreground));
+  }
+
+  /* Form Elements */
+  label {
+    font-size: var(--text-label);
+    font-weight: var(--font-bold);
+    line-height: var(--line-relaxed);
+    color: hsl(var(--foreground));
+  }
+
+  input, textarea, select {
+    font-size: var(--text-body);
+    font-weight: var(--font-normal);
+    line-height: var(--line-relaxed);
+  }
+
+  input::placeholder, textarea::placeholder {
+    font-size: var(--text-body);
+    font-weight: var(--font-normal);
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Buttons */
+  button {
+    font-size: var(--text-body);
+    font-weight: var(--font-semibold);
+    line-height: var(--line-relaxed);
+  }
+
+  /* Navigation */
+  nav a {
+    font-size: var(--text-body);
+    font-weight: var(--font-normal);
+    line-height: var(--line-relaxed);
+  }
+
+  /* Tables */
+  th {
+    font-size: var(--text-caption);
+    font-weight: var(--font-medium);
+    line-height: var(--line-normal);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    color: hsl(var(--muted-foreground));
+  }
+
+  td {
+    font-size: var(--text-body-small);
+    font-weight: var(--font-normal);
+    line-height: var(--line-relaxed);
+  }
+
+  /* Badges */
+  .badge {
+    font-size: var(--text-caption);
+    font-weight: var(--font-medium);
+    line-height: var(--line-normal);
+  }
+
+  /* Cards */
+  .card h3, .card-title {
+    font-size: var(--text-subheading);
+    font-weight: var(--font-semibold);
+    line-height: var(--line-normal);
+  }
+
+  .card p, .card-description {
+    font-size: var(--text-body-small);
+    font-weight: var(--font-normal);
+    line-height: var(--line-relaxed);
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Helper Text */
+  .text-helper, .form-helper {
+    font-size: var(--text-body-small);
+    font-weight: var(--font-normal);
+    line-height: var(--line-normal);
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Rich Text Editor */
+  .rich-text-toolbar {
+    font-size: var(--text-body-small);
+    font-weight: var(--font-normal);
+    line-height: var(--line-normal);
+    color: hsl(var(--muted-foreground));
+  }
+
+  .rich-text-toolbar button {
+    font-weight: var(--font-semibold);
+  }
+
+  /* Sidebar Navigation */
+  .nav-category {
+    font-size: var(--text-body);
+    font-weight: var(--font-semibold);
+    line-height: var(--line-relaxed);
+    color: hsl(var(--muted-foreground));
+  }
+
+  .nav-item {
+    font-size: var(--text-body);
+    font-weight: var(--font-normal);
+    line-height: var(--line-relaxed);
+  }
+
+  /* Status and Info Text */
+  .text-status {
+    font-size: var(--text-body-small);
+    font-weight: var(--font-normal);
+    line-height: var(--line-relaxed);
+  }
+
+  .text-info {
+    font-size: var(--text-body-small);
+    font-weight: var(--font-normal);
+    line-height: var(--line-relaxed);
+    color: hsl(var(--muted-foreground));
+  }
+
 }
 
 @layer components {
@@ -64,17 +262,27 @@
     @apply bg-primary text-primary-foreground rounded-lg px-4 py-2 font-medium;
     @apply hover:bg-primary/90 transition-colors;
     @apply border border-primary/20;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/50;
   }
   
   .btn-secondary {
     @apply bg-secondary text-secondary-foreground rounded-lg px-4 py-2 font-medium;
     @apply hover:bg-secondary/90 transition-colors;
     @apply border border-border;
+    @apply focus:outline-none focus:ring-2 focus:ring-secondary/50;
   }
   
   .btn-ghost {
     @apply bg-transparent text-muted-foreground rounded-lg px-4 py-2 font-medium;
     @apply hover:bg-muted hover:text-foreground transition-colors;
+    @apply focus:outline-none focus:ring-2 focus:ring-muted/50;
+  }
+  
+  .btn-destructive {
+    @apply bg-destructive text-destructive-foreground rounded-lg px-4 py-2 font-medium;
+    @apply hover:bg-destructive/90 transition-colors;
+    @apply border border-destructive/20;
+    @apply focus:outline-none focus:ring-2 focus:ring-destructive/50;
   }
   
   /* Card Styles */
@@ -232,4 +440,58 @@
   .animate-slide-up {
     animation: slideUp 0.3s ease-out;
   }
+
+  /* Sidebar Collapse Animations */
+  @keyframes slideInFromLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideOutToLeft {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+  }
+
+  @keyframes chevronRotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(90deg);
+    }
+  }
+
+  /* Smooth height transitions for collapsible content */
+  .collapse-content {
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Staggered animation for subcategory items */
+  .subcategory-item {
+    animation: slideInFromLeft 0.3s ease-out forwards;
+    opacity: 0;
+  }
+
+  .subcategory-item:nth-child(1) { animation-delay: 0ms; }
+  .subcategory-item:nth-child(2) { animation-delay: 50ms; }
+  .subcategory-item:nth-child(3) { animation-delay: 100ms; }
+  .subcategory-item:nth-child(4) { animation-delay: 150ms; }
+  .subcategory-item:nth-child(5) { animation-delay: 200ms; }
+  .subcategory-item:nth-child(6) { animation-delay: 250ms; }
+  .subcategory-item:nth-child(7) { animation-delay: 300ms; }
+  .subcategory-item:nth-child(8) { animation-delay: 350ms; }
+  .subcategory-item:nth-child(9) { animation-delay: 400ms; }
 }

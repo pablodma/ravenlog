@@ -1,7 +1,16 @@
+'use client'
+
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Save, X, Users, Plane } from 'lucide-react'
+import { Plus, Edit2, Trash2, Save, X, Users, Plane } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
+import PageFrame from '@/components/ui/PageFrame'
+import EmptyState from '@/components/ui/EmptyState'
+import LoadingState from '@/components/ui/LoadingState'
+import ActionButton from '@/components/ui/ActionButton'
+import DataTable from '@/components/ui/DataTable'
+import { useIsMounted } from '@/hooks/useIsMounted'
+import { useStableEffect } from '@/hooks/useStableEffect'
 
 interface Unit {
   id: string
@@ -46,14 +55,16 @@ const UNIT_TYPES = [
   'division'
 ]
 
+type TabType = 'list' | 'create' | 'edit'
+
 export default function UnitManager() {
   const [units, setUnits] = useState<Unit[]>([])
   const [groups, setGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabType>('list')
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null)
   const [uploading, setUploading] = useState(false)
-  const [form, setForm] = useState<UnitForm>({
+  const [formData, setFormData] = useState<UnitForm>({
     name: '',
     description: '',
     unit_type: 'squadron',
@@ -62,31 +73,92 @@ export default function UnitManager() {
     max_personnel: 50,
     group_id: null
   })
+  
+  const isMounted = useIsMounted()
 
-  useEffect(() => {
-    fetchGroups()
-    fetchUnits()
+  useStableEffect(() => {
+    let mounted = true
+    let abortController: AbortController | null = null
+    
+    console.log('🔄 UnitManager: Iniciando carga de datos...')
+    
+    const loadData = async () => {
+      // Crear nuevo AbortController para esta carga
+      abortController = new AbortController()
+      
+      try {
+        await Promise.all([
+          fetchGroups(abortController.signal),
+          fetchUnits(abortController.signal)
+        ])
+        
+        if (mounted) {
+          console.log('✅ UnitManager: Carga inicial completada')
+        }
+      } catch (error: any) {
+        if (error.name !== 'AbortError' && mounted) {
+          console.error('❌ UnitManager: Error en carga inicial:', error)
+        }
+      }
+    }
+    
+    loadData()
+    
+    // Cleanup function para cancelar requests pendientes
+    return () => {
+      mounted = false
+      if (abortController) {
+        console.log('🔄 UnitManager: Cancelando requests pendientes...')
+        abortController.abort()
+      }
+    }
   }, [])
 
-  const fetchGroups = async () => {
+  const fetchGroups = async (signal?: AbortSignal) => {
     try {
+      console.log('🔄 UnitManager: Cargando grupos...')
+      
+      // Verificar si la request fue cancelada
+      if (signal?.aborted) {
+        console.log('❌ UnitManager: Request de grupos cancelada')
+        return
+      }
+      
       const { data, error } = await supabase
         .from('groups')
         .select('id, name, color, display_order')
         .eq('is_active', true)
         .order('display_order')
+        .abortSignal(signal)
 
       if (error) throw error
-      setGroups(data || [])
-    } catch (error) {
-      console.error('Error fetching groups:', error)
+      console.log('✅ UnitManager: Grupos cargados:', data?.length || 0)
+      
+      // Solo actualizar estado si el componente sigue montado
+      if (!signal?.aborted && isMounted) {
+        setGroups(data || [])
+      }
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('❌ UnitManager: Request de grupos abortada')
+        return
+      }
+      console.error('❌ UnitManager: Error cargando grupos:', error)
     }
   }
 
-  const fetchUnits = async () => {
+  const fetchUnits = async (signal?: AbortSignal) => {
     try {
-      // Obtener unidades con conteo de personal y grupo
-      const { data: unitsData, error } = await (supabase as any)
+      console.log('🔄 UnitManager: Cargando unidades...')
+      
+      // Verificar si la request fue cancelada
+      if (signal?.aborted) {
+        console.log('❌ UnitManager: Request de unidades cancelada')
+        return
+      }
+      
+      setLoading(true)
+      const { data: unitsData, error } = await supabase
         .from('units')
         .select(`
           *,
@@ -94,20 +166,30 @@ export default function UnitManager() {
           group:groups(id, name, color)
         `)
         .order('name')
+        .abortSignal(signal)
 
       if (error) throw error
 
-      // Formatear datos para incluir conteo
       const unitsWithCount = unitsData?.map((unit: any) => ({
         ...unit,
         personnel_count: unit.personnel_count?.[0]?.count || 0
       })) || []
 
-      setUnits(unitsWithCount)
-    } catch (error) {
-      console.error('Error fetching units:', error)
+      console.log('✅ UnitManager: Unidades cargadas:', unitsWithCount.length)
+      
+      // Solo actualizar estado si el componente sigue montado
+      if (!signal?.aborted && isMounted) {
+        setUnits(unitsWithCount)
+      }
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('❌ UnitManager: Request de unidades abortada')
+        return
+      }
+      console.error('❌ UnitManager: Error cargando unidades:', error)
       toast.error('Error al cargar unidades')
     } finally {
+      console.log('🏁 UnitManager: Finalizando carga de unidades')
       setLoading(false)
     }
   }
@@ -137,7 +219,7 @@ export default function UnitManager() {
         .from('images')
         .getPublicUrl(filePath)
 
-      setForm({ ...form, image_url: publicUrl })
+      setFormData(prev => ({ ...prev, image_url: publicUrl }))
       toast.success('Imagen subida exitosamente')
     } catch (error: any) {
       console.error('Error uploading image:', error)
@@ -150,19 +232,24 @@ export default function UnitManager() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    if (!formData.name.trim() || !formData.description.trim()) {
+      toast.error('El nombre y descripción son requeridos')
+      return
+    }
+
     try {
       if (editingUnit) {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from('units')
-          .update(form)
+          .update(formData)
           .eq('id', editingUnit.id)
 
         if (error) throw error
         toast.success('Unidad actualizada exitosamente')
       } else {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from('units')
-          .insert([form])
+          .insert([formData])
 
         if (error) throw error
         toast.success('Unidad creada exitosamente')
@@ -175,14 +262,14 @@ export default function UnitManager() {
       if (error.code === '23505') {
         toast.error('Ya existe una unidad con ese nombre')
       } else {
-        toast.error(error.message || 'Error al guardar unidad')
+        toast.error('Error al guardar unidad: ' + error.message)
       }
     }
   }
 
   const handleEdit = (unit: Unit) => {
     setEditingUnit(unit)
-    setForm({
+    setFormData({
       name: unit.name,
       description: unit.description,
       unit_type: unit.unit_type,
@@ -191,7 +278,7 @@ export default function UnitManager() {
       max_personnel: unit.max_personnel,
       group_id: unit.group_id || null
     })
-    setShowForm(true)
+    setActiveTab('edit')
   }
 
   const handleDelete = async (unit: Unit) => {
@@ -203,7 +290,7 @@ export default function UnitManager() {
     if (!confirm(`¿Estás seguro de eliminar la unidad "${unit.name}"?`)) return
 
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('units')
         .delete()
         .eq('id', unit.id)
@@ -213,266 +300,354 @@ export default function UnitManager() {
       fetchUnits()
     } catch (error: any) {
       console.error('Error deleting unit:', error)
-      toast.error(error.message || 'Error al eliminar unidad')
+      toast.error('Error al eliminar unidad: ' + error.message)
     }
   }
 
   const resetForm = () => {
-    setForm({ name: '', description: '', unit_type: 'squadron', callsign: '', image_url: '', max_personnel: 50, group_id: null })
+    setFormData({
+      name: '',
+      description: '',
+      unit_type: 'squadron',
+      callsign: '',
+      image_url: '',
+      max_personnel: 50,
+      group_id: null
+    })
     setEditingUnit(null)
-    setShowForm(false)
+    setActiveTab('list')
   }
+
+  const columns = [
+    {
+      key: 'name',
+      label: 'Unidad',
+      render: (value: string, item: Unit) => (
+        <div className="flex items-center gap-3">
+          {item.image_url ? (
+            <img src={item.image_url} alt={item.name} className="w-8 h-8 object-cover rounded" />
+          ) : (
+            <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+              <Plane className="h-4 w-4 text-muted-foreground" />
+            </div>
+          )}
+          <div>
+            <div className="font-medium text-foreground">{value}</div>
+            {item.callsign && (
+              <div className="text-xs text-muted-foreground font-mono">{item.callsign}</div>
+            )}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'unit_type',
+      label: 'Tipo',
+      render: (value: string) => (
+        <span className="text-sm text-muted-foreground capitalize">{value}</span>
+      )
+    },
+    {
+      key: 'description',
+      label: 'Descripción',
+      render: (value: string) => (
+        <div className="max-w-xs truncate text-muted-foreground">
+          {value}
+        </div>
+      )
+    },
+    {
+      key: 'personnel_count',
+      label: 'Personal',
+      render: (value: number, item: Unit) => (
+        <div className="flex items-center gap-1 text-sm">
+          <Users className="h-3 w-3 text-muted-foreground" />
+          <span>{value || 0}/{item.max_personnel}</span>
+        </div>
+      )
+    },
+    {
+      key: 'group',
+      label: 'Grupo',
+      render: (value: any) => (
+        value ? (
+          <div className="flex items-center gap-2">
+            <div 
+              className="w-2 h-2 rounded-full" 
+              style={{ backgroundColor: value.color }}
+            />
+            <span className="text-sm text-muted-foreground">{value.name}</span>
+          </div>
+        ) : (
+          <span className="text-sm text-muted-foreground">Sin grupo</span>
+        )
+      )
+    },
+    {
+      key: 'actions',
+      label: 'Acciones',
+      render: (value: any, item: Unit) => (
+        <div className="flex items-center gap-2">
+          <ActionButton
+            variant="secondary"
+            size="sm"
+            icon={Edit2}
+            onClick={() => handleEdit(item)}
+          >
+            Editar
+          </ActionButton>
+          <ActionButton
+            variant="destructive"
+            size="sm"
+            icon={Trash2}
+            onClick={() => handleDelete(item)}
+            disabled={!!(item.personnel_count && item.personnel_count > 0)}
+          >
+            Eliminar
+          </ActionButton>
+        </div>
+      )
+    }
+  ]
+
+  const emptyState = (
+    <EmptyState
+      icon={Plane}
+      title="No hay unidades"
+      description="Aún no has creado ninguna unidad. Crea la primera para comenzar."
+      action={{
+        label: "Crear Primera Unidad",
+        onClick: () => setActiveTab('create'),
+        icon: Plus
+      }}
+    />
+  )
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
+      <PageFrame title="Unidades" description="Gestiona las unidades militares del sistema">
+        <LoadingState text="Cargando unidades..." />
+      </PageFrame>
     )
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gestión de Unidades</h2>
-          <p className="text-gray-600">Crear y gestionar unidades militares</p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Nueva Unidad
-        </button>
-      </div>
-
-      {showForm && (
-        <div className="bg-white p-6 rounded-lg border shadow-sm">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">
-              {editingUnit ? 'Editar Unidad' : 'Nueva Unidad'}
-            </h3>
-            <button onClick={resetForm} className="text-gray-500 hover:text-gray-700">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'create':
+      case 'edit':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre de la Unidad
+                <h3 className="text-lg font-semibold text-foreground">
+                  {editingUnit ? 'Editar Unidad' : 'Crear Nueva Unidad'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {editingUnit ? 'Modifica los datos de la unidad' : 'Completa los datos para crear una nueva unidad'}
+                </p>
+              </div>
+              <ActionButton
+                variant="secondary"
+                icon={X}
+                onClick={resetForm}
+              >
+                Cancelar
+              </ActionButton>
+            </div>
+
+            <form onSubmit={handleSubmit} className="bg-card rounded-lg border p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Nombre de la Unidad <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="ej: 101st Fighter Squadron"
+                    className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Tipo de Unidad
+                  </label>
+                  <select
+                    value={formData.unit_type}
+                    onChange={(e) => setFormData(prev => ({ ...prev, unit_type: e.target.value }))}
+                    className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                  >
+                    {UNIT_TYPES.map(type => (
+                      <option key={type} value={type}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Grupo
+                  </label>
+                  <select
+                    value={formData.group_id || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, group_id: e.target.value || null }))}
+                    className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                  >
+                    <option value="">Sin grupo asignado</option>
+                    {groups.map(group => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Máximo Personal
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.max_personnel}
+                    onChange={(e) => setFormData(prev => ({ ...prev, max_personnel: parseInt(e.target.value) }))}
+                    min="1"
+                    max="500"
+                    className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Callsign
                 </label>
                 <input
                   type="text"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="ej: 101st Fighter Squadron"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={formData.callsign}
+                  onChange={(e) => setFormData(prev => ({ ...prev, callsign: e.target.value }))}
+                  placeholder="ej: VIPER, EAGLE, FALCON"
+                  className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Descripción <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Describe la misión y responsabilidades de esta unidad..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo de Unidad
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Imagen de la Unidad
                 </label>
-                <select
-                  value={form.unit_type}
-                  onChange={(e) => setForm({ ...form, unit_type: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {UNIT_TYPES.map(type => (
-                    <option key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Grupo
-                </label>
-                <select
-                  value={form.group_id || ''}
-                  onChange={(e) => setForm({ ...form, group_id: e.target.value || null })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Sin grupo asignado</option>
-                  {groups.map(group => (
-                    <option key={group.id} value={group.id}>
-                      {group.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Máximo Personal
-                </label>
-                <input
-                  type="number"
-                  value={form.max_personnel}
-                  onChange={(e) => setForm({ ...form, max_personnel: parseInt(e.target.value) })}
-                  min="1"
-                  max="500"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Callsign
-              </label>
-              <input
-                type="text"
-                value={form.callsign}
-                onChange={(e) => setForm({ ...form, callsign: e.target.value })}
-                placeholder="ej: VIPER, EAGLE, FALCON"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción
-              </label>
-              <textarea
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="Describe la misión y responsabilidades de esta unidad..."
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Imagen de la Unidad
-              </label>
-              <div className="flex items-center gap-4">
-                {form.image_url && (
-                  <img src={form.image_url} alt="Preview" className="w-16 h-16 object-cover rounded-lg border" />
-                )}
-                <div className="flex-1">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={uploading}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  {uploading && <p className="text-sm text-blue-600 mt-1">Subiendo imagen...</p>}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {editingUnit ? 'Actualizar' : 'Crear'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      <div className="grid gap-4">
-        {units.map((unit) => (
-          <div key={unit.id} className="bg-white p-4 rounded-lg border shadow-sm flex items-center gap-4">
-            <div className="flex-shrink-0">
-              {unit.image_url ? (
-                <img src={unit.image_url} alt={unit.name} className="w-16 h-16 object-cover rounded-lg border" />
-              ) : (
-                <div className="w-16 h-16 bg-gray-100 rounded-lg border flex items-center justify-center">
-                  <Plane className="h-8 w-8 text-gray-400" />
-                </div>
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold text-gray-900">{unit.name}</h3>
-                {unit.callsign && (
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-mono">
-                    {unit.callsign}
-                  </span>
-                )}
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded capitalize">
-                  {unit.unit_type}
-                </span>
-                {unit.group && (
-                  <span 
-                    className="text-xs px-2 py-1 rounded flex items-center gap-1"
-                    style={{ 
-                      backgroundColor: `${unit.group.color}20`,
-                      color: unit.group.color
-                    }}
-                  >
-                    <div 
-                      className="w-2 h-2 rounded-full" 
-                      style={{ backgroundColor: unit.group.color }}
+                <div className="flex items-center gap-4">
+                  {formData.image_url && (
+                    <img src={formData.image_url} alt="Preview" className="w-16 h-16 object-cover rounded-lg border" />
+                  )}
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploading}
+                      className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                     />
-                    {unit.group.name}
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-600 mb-2">{unit.description}</p>
-              <div className="flex items-center gap-4 text-xs text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Users className="h-3 w-3" />
-                  {unit.personnel_count || 0}/{unit.max_personnel} personal
+                    {uploading && <p className="text-sm text-primary mt-1">Subiendo imagen...</p>}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleEdit(unit)}
-                className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              >
-                <Edit className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => handleDelete(unit)}
-                className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                disabled={!!(unit.personnel_count && unit.personnel_count > 0)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
+
+              <div className="flex gap-3">
+                <ActionButton
+                  type="submit"
+                  variant="primary"
+                  icon={Save}
+                >
+                  {editingUnit ? 'Actualizar' : 'Crear'} Unidad
+                </ActionButton>
+                <ActionButton
+                  type="button"
+                  variant="secondary"
+                  icon={X}
+                  onClick={resetForm}
+                >
+                  Cancelar
+                </ActionButton>
+              </div>
+            </form>
           </div>
-        ))}
+        )
+      
+      case 'list':
+      default:
+        return (
+          <DataTable
+            data={units}
+            columns={columns}
+            emptyState={emptyState}
+          />
+        )
+    }
+  }
+
+  return (
+    <PageFrame 
+      title="Unidades" 
+      description="Gestiona las unidades militares del sistema"
+      headerActions={
+        activeTab === 'list' ? (
+          <ActionButton
+            variant="primary"
+            icon={Plus}
+            onClick={() => setActiveTab('create')}
+          >
+            Nueva Unidad
+          </ActionButton>
+        ) : null
+      }
+    >
+      {/* Tabs Navigation */}
+      <div className="border-b border-border mb-6">
+        <nav className="flex space-x-8">
+          <button
+            onClick={() => setActiveTab('list')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'list'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+            }`}
+          >
+            Lista de Unidades
+          </button>
+          <button
+            onClick={() => setActiveTab('create')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'create'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+            }`}
+          >
+            Crear Unidad
+          </button>
+        </nav>
       </div>
 
-      {units.length === 0 && (
-        <div className="text-center py-12">
-          <Plane className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 mb-4">No hay unidades creadas aún</p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Crear Primera Unidad
-          </button>
-        </div>
-      )}
-    </div>
+      {renderTabContent()}
+    </PageFrame>
   )
 }

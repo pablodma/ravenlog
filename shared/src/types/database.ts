@@ -6,490 +6,431 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
   public: {
     Tables: {
-      profiles: {
+      assignment_records: {
         Row: {
+          assignment_type: string
+          created_at: string | null
+          created_by: string | null
+          effective_date: string
+          from_position_id: string | null
+          from_role: string | null
+          from_unit_id: string | null
           id: string
-          email: string
-          full_name: string | null
-          avatar_url: string | null
-          role: 'admin' | 'personnel' | 'candidate'
-          role_id?: string | null
-          unit_id?: string | null
-          rank_id?: string | null
+          notes: string | null
+          reason: string | null
+          to_position_id: string | null
+          to_role: string | null
+          to_unit_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          assignment_type: string
+          created_at?: string | null
+          created_by?: string | null
+          effective_date: string
+          from_position_id?: string | null
+          from_role?: string | null
+          from_unit_id?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string | null
+          to_position_id?: string | null
+          to_role?: string | null
+          to_unit_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          assignment_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          effective_date?: string
+          from_position_id?: string | null
+          from_role?: string | null
+          from_unit_id?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string | null
+          to_position_id?: string | null
+          to_role?: string | null
+          to_unit_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_records_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_records_from_position_id_fkey"
+            columns: ["from_position_id"]
+            isOneToOne: false
+            referencedRelation: "unit_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_records_from_unit_id_fkey"
+            columns: ["from_unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_records_to_position_id_fkey"
+            columns: ["to_position_id"]
+            isOneToOne: false
+            referencedRelation: "unit_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_records_to_unit_id_fkey"
+            columns: ["to_unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_records_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fields: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      forms: {
+        Row: {
           created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          instructions: string | null
+          is_active: boolean
+          is_public: boolean
+          name: string
+          slug: string
           updated_at: string
         }
         Insert: {
-          id: string
-          email: string
-          full_name?: string | null
-          avatar_url?: string | null
-          role?: 'admin' | 'personnel' | 'candidate'
-          role_id?: string | null
-          unit_id?: string | null
-          rank_id?: string | null
           created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          is_public?: boolean
+          name: string
+          slug: string
           updated_at?: string
         }
         Update: {
-          id?: string
-          email?: string
-          full_name?: string | null
-          avatar_url?: string | null
-          role?: 'admin' | 'personnel' | 'candidate'
-          role_id?: string | null
-          unit_id?: string | null
-          rank_id?: string | null
           created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          is_public?: boolean
+          name?: string
+          slug?: string
           updated_at?: string
         }
+        Relationships: []
+      }
+      form_fields: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          field_type: string
+          form_id: string
+          id: string
+          is_active: boolean
+          is_required: boolean
+          label: string
+          options: Json | null
+          placeholder: string | null
+          updated_at: string
+          validation_rules: Json | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          field_type: string
+          form_id: string
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          label: string
+          options?: Json | null
+          placeholder?: string | null
+          updated_at?: string
+          validation_rules?: Json | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          field_type?: string
+          form_id?: string
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          label?: string
+          options?: Json | null
+          placeholder?: string | null
+          updated_at?: string
+          validation_rules?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_fields_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_submissions: {
+        Row: {
+          created_at: string
+          form_data: Json
+          form_id: string
+          id: string
+          is_read: boolean
+          notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_by: string | null
+          submitted_by_email: string | null
+          submitted_by_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          form_data: Json
+          form_id: string
+          id?: string
+          is_read?: boolean
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_by?: string | null
+          submitted_by_email?: string | null
+          submitted_by_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          form_data?: Json
+          form_id?: string
+          id?: string
+          is_read?: boolean
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_by?: string | null
+          submitted_by_email?: string | null
+          submitted_by_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          position_id: string | null
+          rank_id: string | null
+          role: string
+          role_id: string | null
+          secondary_roles: string[] | null
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          position_id?: string | null
+          rank_id?: string | null
+          role?: string
+          role_id?: string | null
+          secondary_roles?: string[] | null
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          position_id?: string | null
+          rank_id?: string | null
+          role?: string
+          role_id?: string | null
+          secondary_roles?: string[] | null
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "unit_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_rank_id_fkey"
+            columns: ["rank_id"]
+            isOneToOne: false
+            referencedRelation: "rank_eligibility"
+            referencedColumns: ["current_rank_id"]
+          },
+          {
+            foreignKeyName: "profiles_rank_id_fkey"
+            columns: ["rank_id"]
+            isOneToOne: false
+            referencedRelation: "ranks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ranks: {
         Row: {
-          id: string
-          name: string
           abbreviation: string
-          order: number
-          image_url: string | null
           created_at: string
+          custom_requirements: Json | null
+          description: string | null
+          id: string
+          image_url: string | null
+          minimum_accuracy: number | null
+          minimum_kd_ratio: number | null
+          name: string
+          order: number
+          required_certification_ids: string[] | null
+          required_flight_hours: number | null
+          required_kills: number | null
+          required_landings: number | null
+          required_missions: number | null
+          required_takeoffs: number | null
+          requirements_enforced: boolean | null
+          time_in_previous_rank_days: number | null
         }
         Insert: {
-          id?: string
-          name: string
           abbreviation: string
-          order: number
-          image_url?: string | null
           created_at?: string
+          custom_requirements?: Json | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          minimum_accuracy?: number | null
+          minimum_kd_ratio?: number | null
+          name: string
+          order: number
+          required_certification_ids?: string[] | null
+          required_flight_hours?: number | null
+          required_kills?: number | null
+          required_landings?: number | null
+          required_missions?: number | null
+          required_takeoffs?: number | null
+          requirements_enforced?: boolean | null
+          time_in_previous_rank_days?: number | null
         }
         Update: {
-          id?: string
-          name?: string
           abbreviation?: string
+          created_at?: string
+          custom_requirements?: Json | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          minimum_accuracy?: number | null
+          minimum_kd_ratio?: number | null
+          name?: string
           order?: number
-          image_url?: string | null
-          created_at?: string
+          required_certification_ids?: string[] | null
+          required_flight_hours?: number | null
+          required_kills?: number | null
+          required_landings?: number | null
+          required_missions?: number | null
+          required_takeoffs?: number | null
+          requirements_enforced?: boolean | null
+          time_in_previous_rank_days?: number | null
         }
-      }
-      personnel: {
-        Row: {
-          id: string
-          profile_id: string
-          callsign: string
-          rank_id: string
-          flight_unit: string | null
-          status: 'active' | 'inactive' | 'leave' | 'discharged'
-          enlistment_date: string
-          discord_id: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          profile_id: string
-          callsign: string
-          rank_id: string
-          flight_unit?: string | null
-          status?: 'active' | 'inactive' | 'leave' | 'discharged'
-          enlistment_date: string
-          discord_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          profile_id?: string
-          callsign?: string
-          rank_id?: string
-          flight_unit?: string | null
-          status?: 'active' | 'inactive' | 'leave' | 'discharged'
-          enlistment_date?: string
-          discord_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      enrollments: {
-        Row: {
-          id: string
-          profile_id: string
-          status: 'pending' | 'under_review' | 'accepted' | 'rejected'
-          callsign_requested: string
-          motivation: string
-          experience_level: string
-          preferred_role: string
-          availability: string
-          submitted_at: string
-          reviewed_at: string | null
-          reviewed_by: string | null
-          notes: string | null
-        }
-        Insert: {
-          id?: string
-          profile_id: string
-          status?: 'pending' | 'under_review' | 'accepted' | 'rejected'
-          callsign_requested: string
-          motivation: string
-          experience_level: string
-          preferred_role: string
-          availability: string
-          submitted_at?: string
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          notes?: string | null
-        }
-        Update: {
-          id?: string
-          profile_id?: string
-          status?: 'pending' | 'under_review' | 'accepted' | 'rejected'
-          callsign_requested?: string
-          motivation?: string
-          experience_level?: string
-          preferred_role?: string
-          availability?: string
-          submitted_at?: string
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          notes?: string | null
-        }
-      }
-      certifications: {
-        Row: {
-          id: string
-          name: string
-          description: string
-          category: string
-          requirements: string
-          image_url: string | null
-          active: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description: string
-          category: string
-          requirements: string
-          image_url?: string | null
-          active?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string
-          category?: string
-          requirements?: string
-          image_url?: string | null
-          active?: boolean
-          created_at?: string
-        }
-      }
-      personnel_certifications: {
-        Row: {
-          id: string
-          personnel_id: string
-          certification_id: string
-          awarded_by: string
-          awarded_at: string
-          expires_at: string | null
-          notes: string | null
-        }
-        Insert: {
-          id?: string
-          personnel_id: string
-          certification_id: string
-          awarded_by: string
-          awarded_at?: string
-          expires_at?: string | null
-          notes?: string | null
-        }
-        Update: {
-          id?: string
-          personnel_id?: string
-          certification_id?: string
-          awarded_by?: string
-          awarded_at?: string
-          expires_at?: string | null
-          notes?: string | null
-        }
-      }
-      medals: {
-        Row: {
-          id: string
-          name: string
-          description: string
-          category: string
-          requirements: string
-          image_url: string | null
-          rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
-          points: number
-          active: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description: string
-          category: string
-          requirements: string
-          image_url?: string | null
-          rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
-          points?: number
-          active?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string
-          category?: string
-          requirements?: string
-          image_url?: string | null
-          rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
-          points?: number
-          active?: boolean
-          created_at?: string
-        }
-      }
-      personnel_medals: {
-        Row: {
-          id: string
-          personnel_id: string
-          medal_id: string
-          awarded_by: string
-          awarded_at: string
-          reason: string | null
-        }
-        Insert: {
-          id?: string
-          personnel_id: string
-          medal_id: string
-          awarded_by: string
-          awarded_at?: string
-          reason?: string | null
-        }
-        Update: {
-          id?: string
-          personnel_id?: string
-          medal_id?: string
-          awarded_by?: string
-          awarded_at?: string
-          reason?: string | null
-        }
-      }
-      dcs_logs: {
-        Row: {
-          id: string
-          personnel_id: string | null
-          event_type: string
-          event_data: Json
-          mission_name: string | null
-          server_name: string
-          timestamp: string
-          processed_at: string
-        }
-        Insert: {
-          id?: string
-          personnel_id?: string | null
-          event_type: string
-          event_data: Json
-          mission_name?: string | null
-          server_name: string
-          timestamp: string
-          processed_at?: string
-        }
-        Update: {
-          id?: string
-          personnel_id?: string | null
-          event_type?: string
-          event_data?: Json
-          mission_name?: string | null
-          server_name?: string
-          timestamp?: string
-          processed_at?: string
-        }
-      }
-      event_types: {
-        Row: {
-          id: string
-          name: string
-          description: string | null
-          color: string
-          icon: string
-          is_system_type: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description?: string | null
-          color?: string
-          icon?: string
-          is_system_type?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string | null
-          color?: string
-          icon?: string
-          is_system_type?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      flight_events_calendar: {
-        Row: {
-          id: string
-          title: string
-          description: string | null
-          event_type_id: string | null
-          start_date: string
-          end_date: string
-          timezone: string
-          is_all_day: boolean
-          server_name: string | null
-          server_password: string | null
-          voice_channel: string | null
-          organizer_id: string
-          max_participants: number | null
-          min_participants: number
-          status: 'scheduled' | 'active' | 'completed' | 'cancelled'
-          visibility: 'public' | 'unit_only' | 'private'
-          required_aircraft: string[] | null
-          required_certifications: string[] | null
-          difficulty_level: 'beginner' | 'intermediate' | 'advanced' | 'expert'
-          briefing_notes: string | null
-          debrief_notes: string | null
-          external_links: Json | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          description?: string | null
-          event_type_id?: string | null
-          start_date: string
-          end_date: string
-          timezone?: string
-          is_all_day?: boolean
-          server_name?: string | null
-          server_password?: string | null
-          voice_channel?: string | null
-          organizer_id: string
-          max_participants?: number | null
-          min_participants?: number
-          status?: 'scheduled' | 'active' | 'completed' | 'cancelled'
-          visibility?: 'public' | 'unit_only' | 'private'
-          required_aircraft?: string[] | null
-          required_certifications?: string[] | null
-          difficulty_level?: 'beginner' | 'intermediate' | 'advanced' | 'expert'
-          briefing_notes?: string | null
-          debrief_notes?: string | null
-          external_links?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string | null
-          event_type_id?: string | null
-          start_date?: string
-          end_date?: string
-          timezone?: string
-          is_all_day?: boolean
-          server_name?: string | null
-          server_password?: string | null
-          voice_channel?: string | null
-          organizer_id?: string
-          max_participants?: number | null
-          min_participants?: number
-          status?: 'scheduled' | 'active' | 'completed' | 'cancelled'
-          visibility?: 'public' | 'unit_only' | 'private'
-          required_aircraft?: string[] | null
-          required_certifications?: string[] | null
-          difficulty_level?: 'beginner' | 'intermediate' | 'advanced' | 'expert'
-          briefing_notes?: string | null
-          debrief_notes?: string | null
-          external_links?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      event_participants: {
-        Row: {
-          id: string
-          event_id: string
-          user_id: string
-          status: 'registered' | 'confirmed' | 'attended' | 'no_show' | 'cancelled'
-          role: 'participant' | 'flight_lead' | 'instructor' | 'observer'
-          aircraft: string | null
-          callsign: string | null
-          notes: string | null
-          registered_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          event_id: string
-          user_id: string
-          status?: 'registered' | 'confirmed' | 'attended' | 'no_show' | 'cancelled'
-          role?: 'participant' | 'flight_lead' | 'instructor' | 'observer'
-          aircraft?: string | null
-          callsign?: string | null
-          notes?: string | null
-          registered_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          event_id?: string
-          user_id?: string
-          status?: 'registered' | 'confirmed' | 'attended' | 'no_show' | 'cancelled'
-          role?: 'participant' | 'flight_lead' | 'instructor' | 'observer'
-          aircraft?: string | null
-          callsign?: string | null
-          notes?: string | null
-          registered_at?: string
-          updated_at?: string
-        }
-      }
-      event_comments: {
-        Row: {
-          id: string
-          event_id: string
-          user_id: string
-          comment: string
-          is_briefing: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          event_id: string
-          user_id: string
-          comment: string
-          is_briefing?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          event_id?: string
-          user_id?: string
-          comment?: string
-          is_briefing?: boolean
-          created_at?: string
-          updated_at?: string
-        }
+        Relationships: []
       }
     }
     Views: {
@@ -507,7 +448,125 @@ export interface Database {
   }
 }
 
-// Tipos de utilidad para el frontend
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
-export type TablesInsert<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert']
-export type TablesUpdate<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update']
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

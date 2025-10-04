@@ -3,16 +3,20 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { AdminService } from '@/services/adminService'
-import { User, Award, Medal, BarChart3, Calendar, MapPin, Mail, Edit } from 'lucide-react'
+import { User, Award, Medal, BarChart3, Calendar, MapPin, Mail, Edit, Upload, History, Plane } from 'lucide-react'
 import FlightStatistics from '@/components/dcs/FlightStatistics'
+import LogUploader from '@/components/dcs/LogUploader'
+import LogHistory from '@/components/dcs/LogHistory'
+import { ParsedLogSummary } from '@/utils/dcsLogParser'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import DashboardLayout from '@/components/DashboardLayout'
 
 export default function ProfilePage() {
   const { profile } = useAuth()
-  const [activeTab, setActiveTab] = useState<'info' | 'statistics' | 'medals' | 'certifications'>('info')
+  const [activeTab, setActiveTab] = useState<'info' | 'statistics' | 'upload' | 'history' | 'medals' | 'certifications'>('info')
   const [userStats, setUserStats] = useState({ medals: 0, certifications: 0, dcsFlights: 0 })
   const [loading, setLoading] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     if (profile?.id) {
@@ -34,6 +38,18 @@ export default function ProfilePage() {
     }
   }
 
+  const handleUploadComplete = (summary: ParsedLogSummary) => {
+    // Refrescar estadísticas después de una carga exitosa
+    setRefreshKey(prev => prev + 1)
+    
+    // Cambiar a la pestaña de estadísticas para ver los cambios
+    setActiveTab('statistics')
+  }
+
+  const handleUploadClick = () => {
+    setActiveTab('upload')
+  }
+
   if (!profile) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -45,6 +61,8 @@ export default function ProfilePage() {
   const tabs = [
     { id: 'info' as const, name: 'Información Personal', icon: User },
     { id: 'statistics' as const, name: 'Estadísticas DCS', icon: BarChart3 },
+    { id: 'upload' as const, name: 'Subir Log', icon: Upload },
+    { id: 'history' as const, name: 'Historial', icon: History },
     { id: 'medals' as const, name: 'Medallas', icon: Medal },
     { id: 'certifications' as const, name: 'Certificaciones', icon: Award },
   ]
@@ -158,7 +176,48 @@ export default function ProfilePage() {
       case 'statistics':
         return (
           <div className="space-y-6">
-            <FlightStatistics />
+            <FlightStatistics 
+              key={refreshKey}
+              onUploadClick={handleUploadClick}
+            />
+          </div>
+        )
+
+      case 'upload':
+        return (
+          <div className="space-y-6">
+            <div className="card p-8">
+              <div className="mb-6 text-center">
+                <Plane className="mx-auto h-12 w-12 text-primary mb-4" />
+                <h2 className="text-2xl font-bold text-foreground mb-2">Subir log de DCS</h2>
+                <p className="text-muted-foreground">
+                  Cargá un archivo de log para actualizar tus estadísticas de vuelo. 
+                  Los datos se suman a tu historial existente.
+                </p>
+              </div>
+              
+              <LogUploader onUploadComplete={handleUploadComplete} />
+
+              {/* Información adicional */}
+              <div className="mt-8 bg-primary/5 border border-primary/20 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-foreground mb-2">
+                  ¿Cómo obtener logs de DCS?
+                </h3>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Los logs se generan automáticamente en: <code className="bg-muted px-1 rounded">Saved Games/DCS/Logs/</code></li>
+                  <li>• Buscá archivos con extensión <code className="bg-muted px-1 rounded">.log</code></li>
+                  <li>• También podés usar archivos <code className="bg-muted px-1 rounded">.json</code> o <code className="bg-muted px-1 rounded">.jsonl</code></li>
+                  <li>• Los archivos se procesan de forma segura y no se almacenan permanentemente</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )
+
+      case 'history':
+        return (
+          <div className="space-y-6">
+            <LogHistory />
           </div>
         )
 

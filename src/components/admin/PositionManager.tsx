@@ -9,24 +9,29 @@ import {
   useUpdatePosition,
   useDeletePosition,
 } from '@/hooks/useRecruitmentData'
+import PageFrame from '@/components/ui/PageFrame'
+import EmptyState from '@/components/ui/EmptyState'
+import LoadingState from '@/components/ui/LoadingState'
+import ActionButton from '@/components/ui/ActionButton'
+import DataTable from '@/components/ui/DataTable'
 
 interface PositionForm {
   id?: string
   name: string
   description: string
-  unit_id: string
   display_order: number
   is_leadership: boolean
   color: string
 }
 
+type TabType = 'list' | 'create' | 'edit'
+
 export default function PositionManager() {
-  const [isCreating, setIsCreating] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabType>('list')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState<PositionForm>({
     name: '',
     description: '',
-    unit_id: '',
     display_order: 0,
     is_leadership: false,
     color: '#6B7280',
@@ -42,23 +47,21 @@ export default function PositionManager() {
     setFormData({
       name: '',
       description: '',
-      unit_id: '',
       display_order: 0,
       is_leadership: false,
       color: '#6B7280',
     })
-    setIsCreating(false)
     setEditingId(null)
+    setActiveTab('list')
   }
 
   const handleCreate = () => {
-    if (!formData.name || !formData.unit_id) return
+    if (!formData.name) return
 
     createMutation.mutate(
       {
         name: formData.name,
         description: formData.description || undefined,
-        unit_id: formData.unit_id,
         display_order: formData.display_order,
         is_leadership: formData.is_leadership,
         color: formData.color,
@@ -92,13 +95,12 @@ export default function PositionManager() {
       id: position.id,
       name: position.name,
       description: position.description || '',
-      unit_id: position.unit_id,
       display_order: position.display_order,
       is_leadership: position.is_leadership,
       color: position.color || '#6B7280',
     })
     setEditingId(position.id)
-    setIsCreating(false)
+    setActiveTab('edit')
   }
 
   const handleDelete = (id: string) => {
@@ -107,240 +109,297 @@ export default function PositionManager() {
     }
   }
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (editingId) {
+      handleUpdate()
+    } else {
+      handleCreate()
+    }
+  }
+
   const loading = unitsLoading || positionsLoading
+
+  // Ordenar posiciones por display_order
+  const sortedPositions = positions?.sort((a: any, b: any) => a.display_order - b.display_order) || []
+
+  const columns = [
+    {
+      key: 'name',
+      label: 'Posición',
+      render: (value: string, item: any) => (
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-3 h-3 rounded-full" 
+            style={{ backgroundColor: item.color }}
+          />
+          <div>
+            <div className="font-medium text-foreground">{value}</div>
+            {item.is_leadership && (
+              <div className="text-xs text-yellow-600 flex items-center gap-1">
+                <Shield className="h-3 w-3" />
+                Liderazgo
+              </div>
+            )}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'description',
+      label: 'Descripción',
+      render: (value: string) => (
+        <div className="max-w-xs truncate text-muted-foreground">
+          {value || 'Sin descripción'}
+        </div>
+      )
+    },
+    {
+      key: 'display_order',
+      label: 'Orden',
+      render: (value: number) => (
+        <span className="text-sm text-muted-foreground">#{value}</span>
+      )
+    },
+    {
+      key: 'is_leadership',
+      label: 'Tipo',
+      render: (value: boolean) => (
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+          value ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+        }`}>
+          {value ? 'Liderazgo' : 'Regular'}
+        </span>
+      )
+    },
+    {
+      key: 'actions',
+      label: 'Acciones',
+      render: (value: any, item: any) => (
+        <div className="flex items-center gap-2">
+          <ActionButton
+            variant="secondary"
+            size="sm"
+            icon={Edit2}
+            onClick={() => handleEdit(item)}
+          >
+            Editar
+          </ActionButton>
+          <ActionButton
+            variant="destructive"
+            size="sm"
+            icon={Trash2}
+            onClick={() => handleDelete(item.id)}
+            disabled={deleteMutation.isPending}
+          >
+            Eliminar
+          </ActionButton>
+        </div>
+      )
+    }
+  ]
+
+  const emptyState = (
+    <EmptyState
+      icon={User}
+      title="No hay posiciones"
+      description="Aún no has creado ninguna posición. Crea la primera para comenzar."
+      action={{
+        label: "Crear Primera Posición",
+        onClick: () => setActiveTab('create'),
+        icon: Plus
+      }}
+    />
+  )
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
+      <PageFrame title="Posiciones" description="Gestiona las posiciones de combate del sistema">
+        <LoadingState text="Cargando posiciones..." />
+      </PageFrame>
     )
   }
 
-  // Agrupar posiciones por unidad
-  const positionsByUnit = positions?.reduce((acc: any, position: any) => {
-    const unitName = position.unit?.name || 'Sin unidad'
-    if (!acc[unitName]) acc[unitName] = []
-    acc[unitName].push(position)
-    return acc
-  }, {})
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'create':
+      case 'edit':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  {editingId ? 'Editar Posición' : 'Crear Nueva Posición'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {editingId ? 'Modifica los datos de la posición' : 'Completa los datos para crear una nueva posición'}
+                </p>
+              </div>
+              <ActionButton
+                variant="secondary"
+                icon={X}
+                onClick={resetForm}
+              >
+                Cancelar
+              </ActionButton>
+            </div>
+
+            <form onSubmit={handleSubmit} className="bg-card rounded-lg border p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Nombre <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Ej: Líder de Escuadrón"
+                    className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Orden de visualización
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.display_order}
+                    onChange={(e) => setFormData(prev => ({ ...prev, display_order: parseInt(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Descripción
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Descripción de la posición..."
+                  rows={2}
+                  className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Color (hex)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={formData.color}
+                      onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
+                      className="h-10 w-16 rounded border border-input cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.color}
+                      onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
+                      className="flex-1 px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-end">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_leadership}
+                      onChange={(e) => setFormData(prev => ({ ...prev, is_leadership: e.target.checked }))}
+                      className="rounded text-primary focus:ring-primary border-input"
+                    />
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">
+                      Marcar como posición de liderazgo
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <ActionButton
+                  type="submit"
+                  variant="primary"
+                  icon={Save}
+                  disabled={!formData.name || createMutation.isPending || updateMutation.isPending}
+                >
+                  {editingId ? 'Actualizar' : 'Crear'} Posición
+                </ActionButton>
+                <ActionButton
+                  type="button"
+                  variant="secondary"
+                  icon={X}
+                  onClick={resetForm}
+                >
+                  Cancelar
+                </ActionButton>
+              </div>
+            </form>
+          </div>
+        )
+      
+      case 'list':
+      default:
+        return (
+          <DataTable
+            data={sortedPositions}
+            columns={columns}
+            emptyState={emptyState}
+          />
+        )
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Posiciones de Combate</h2>
-          <p className="text-gray-600">Gestionar posiciones dentro de cada unidad</p>
-        </div>
-        <button
-          onClick={() => setIsCreating(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Nueva Posición
-        </button>
+    <PageFrame 
+      title="Posiciones de Combate" 
+      description="Gestiona las posiciones globales disponibles para todas las unidades"
+      headerActions={
+        activeTab === 'list' ? (
+          <ActionButton
+            variant="primary"
+            icon={Plus}
+            onClick={() => setActiveTab('create')}
+          >
+            Nueva Posición
+          </ActionButton>
+        ) : null
+      }
+    >
+      {/* Tabs Navigation */}
+      <div className="border-b border-border mb-6">
+        <nav className="flex space-x-8">
+          <button
+            onClick={() => setActiveTab('list')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'list'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+            }`}
+          >
+            Lista de Posiciones
+          </button>
+          <button
+            onClick={() => setActiveTab('create')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'create'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+            }`}
+          >
+            Crear Posición
+          </button>
+        </nav>
       </div>
 
-      {/* Formulario de creación/edición */}
-      {(isCreating || editingId) && (
-        <div className="bg-white border rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {editingId ? 'Editar Posición' : 'Nueva Posición'}
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nombre <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ej: Líder de Escuadrón"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Unidad <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.unit_id}
-                onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
-                disabled={!!editingId} // No se puede cambiar al editar
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-              >
-                <option value="">Seleccionar unidad...</option>
-                {units?.map((unit) => (
-                  <option key={unit.id} value={unit.id}>
-                    {unit.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Descripción
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Descripción de la posición..."
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Orden de visualización
-              </label>
-              <input
-                type="number"
-                value={formData.display_order}
-                onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Color (hex)
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={formData.color}
-                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  className="h-10 w-16 rounded border border-gray-300 cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={formData.color}
-                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.is_leadership}
-                  onChange={(e) => setFormData({ ...formData, is_leadership: e.target.checked })}
-                  className="rounded text-blue-600 focus:ring-blue-500"
-                />
-                <Shield className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">
-                  Marcar como posición de liderazgo
-                </span>
-              </label>
-            </div>
-          </div>
-
-          <div className="flex gap-3 mt-6">
-            <button
-              onClick={editingId ? handleUpdate : handleCreate}
-              disabled={!formData.name || !formData.unit_id || createMutation.isPending || updateMutation.isPending}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              <Save className="h-4 w-4" />
-              {editingId ? 'Actualizar' : 'Crear'}
-            </button>
-            <button
-              onClick={resetForm}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
-            >
-              <X className="h-4 w-4" />
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Lista de posiciones por unidad */}
-      <div className="space-y-6">
-        {positionsByUnit && Object.keys(positionsByUnit).length > 0 ? (
-          Object.entries(positionsByUnit).map(([unitName, unitPositions]: [string, any]) => (
-            <div key={unitName} className="bg-white border rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">{unitName}</h3>
-              
-              <div className="space-y-2">
-                {unitPositions.map((position: any) => (
-                  <div
-                    key={position.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: position.color }}
-                      />
-                      {position.is_leadership && (
-                        <Shield className="h-4 w-4 text-yellow-600" />
-                      )}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-900">{position.name}</p>
-                          {position.is_leadership && (
-                            <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">
-                              Liderazgo
-                            </span>
-                          )}
-                        </div>
-                        {position.description && (
-                          <p className="text-sm text-gray-600">{position.description}</p>
-                        )}
-                        <p className="text-xs text-gray-500">Orden: {position.display_order}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEdit(position)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Editar"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(position.id)}
-                        disabled={deleteMutation.isPending}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="bg-white border rounded-lg p-12 text-center">
-            <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No hay posiciones creadas
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Crea posiciones de combate para organizar tu unidad
-            </p>
-            <button
-              onClick={() => setIsCreating(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Nueva Posición
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+      {renderTabContent()}
+    </PageFrame>
   )
 }
-

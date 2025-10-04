@@ -1,7 +1,14 @@
+'use client'
+
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Save, X, Star } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { Plus, Edit2, Trash2, Save, X, Star, Target, Clock, Trophy, Crosshair, Award } from 'lucide-react'
 import toast from 'react-hot-toast'
+import PageFrame from '@/components/ui/PageFrame'
+import EmptyState from '@/components/ui/EmptyState'
+import LoadingState from '@/components/ui/LoadingState'
+import ActionButton from '@/components/ui/ActionButton'
+import DataTable from '@/components/ui/DataTable'
 
 interface Rank {
   id: string
@@ -9,6 +16,16 @@ interface Rank {
   abbreviation: string
   order: number
   image_url: string | null
+  description: string | null
+  required_missions: number
+  required_flight_hours: number
+  required_takeoffs: number
+  required_landings: number
+  required_kills: number
+  minimum_accuracy: number
+  minimum_kd_ratio: number
+  time_in_previous_rank_days: number
+  requirements_enforced: boolean
   created_at: string
 }
 
@@ -17,19 +34,42 @@ interface RankForm {
   abbreviation: string
   order: number
   image_url: string
+  description: string
+  required_missions: number
+  required_flight_hours: number
+  required_takeoffs: number
+  required_landings: number
+  required_kills: number
+  minimum_accuracy: number
+  minimum_kd_ratio: number
+  time_in_previous_rank_days: number
+  requirements_enforced: boolean
 }
+
+type TabType = 'list' | 'create' | 'edit'
 
 export default function RankManager() {
   const [ranks, setRanks] = useState<Rank[]>([])
   const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabType>('list')
   const [editingRank, setEditingRank] = useState<Rank | null>(null)
   const [uploading, setUploading] = useState(false)
-  const [form, setForm] = useState<RankForm>({
+  const [showRequirements, setShowRequirements] = useState(false)
+  const [formData, setFormData] = useState<RankForm>({
     name: '',
     abbreviation: '',
     order: 1,
-    image_url: ''
+    image_url: '',
+    description: '',
+    required_missions: 0,
+    required_flight_hours: 0,
+    required_takeoffs: 0,
+    required_landings: 0,
+    required_kills: 0,
+    minimum_accuracy: 0,
+    minimum_kd_ratio: 0,
+    time_in_previous_rank_days: 0,
+    requirements_enforced: false
   })
 
   useEffect(() => {
@@ -38,25 +78,17 @@ export default function RankManager() {
 
   const fetchRanks = async () => {
     try {
-      console.log('Fetching ranks...')
-      const { data, error } = await (supabase as any)
+      setLoading(true)
+      const { data, error } = await supabase
         .from('ranks')
         .select('*')
         .order('order')
 
-      console.log('Ranks response:', { data, error })
-      
-      if (error) {
-        console.error('Supabase error:', error)
-        throw error
-      }
-      
+      if (error) throw error
       setRanks(data || [])
-      console.log('Ranks loaded successfully:', data?.length || 0)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching ranks:', error)
-      console.error('Error details:', JSON.stringify(error, null, 2))
-      toast.error(`Error al cargar rangos: ${(error as any)?.message || 'Error desconocido'}`)
+      toast.error('Error al cargar rangos: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -87,7 +119,7 @@ export default function RankManager() {
         .from('images')
         .getPublicUrl(filePath)
 
-      setForm({ ...form, image_url: publicUrl })
+      setFormData(prev => ({ ...prev, image_url: publicUrl }))
       toast.success('Imagen subida exitosamente')
     } catch (error: any) {
       console.error('Error uploading image:', error)
@@ -100,19 +132,24 @@ export default function RankManager() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    if (!formData.name.trim() || !formData.abbreviation.trim()) {
+      toast.error('El nombre y abreviación son requeridos')
+      return
+    }
+
     try {
       if (editingRank) {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from('ranks')
-          .update(form)
+          .update(formData)
           .eq('id', editingRank.id)
 
         if (error) throw error
         toast.success('Rango actualizado exitosamente')
       } else {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from('ranks')
-          .insert([form])
+          .insert([formData])
 
         if (error) throw error
         toast.success('Rango creado exitosamente')
@@ -122,26 +159,36 @@ export default function RankManager() {
       fetchRanks()
     } catch (error: any) {
       console.error('Error saving rank:', error)
-      toast.error(error.message || 'Error al guardar rango')
+      toast.error('Error al guardar rango: ' + error.message)
     }
   }
 
   const handleEdit = (rank: Rank) => {
     setEditingRank(rank)
-    setForm({
+    setFormData({
       name: rank.name,
       abbreviation: rank.abbreviation,
       order: rank.order,
-      image_url: rank.image_url || ''
+      image_url: rank.image_url || '',
+      description: rank.description || '',
+      required_missions: rank.required_missions || 0,
+      required_flight_hours: rank.required_flight_hours || 0,
+      required_takeoffs: rank.required_takeoffs || 0,
+      required_landings: rank.required_landings || 0,
+      required_kills: rank.required_kills || 0,
+      minimum_accuracy: rank.minimum_accuracy || 0,
+      minimum_kd_ratio: rank.minimum_kd_ratio || 0,
+      time_in_previous_rank_days: rank.time_in_previous_rank_days || 0,
+      requirements_enforced: rank.requirements_enforced || false
     })
-    setShowForm(true)
+    setActiveTab('edit')
   }
 
   const handleDelete = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar este rango?')) return
 
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('ranks')
         .delete()
         .eq('id', id)
@@ -151,185 +198,486 @@ export default function RankManager() {
       fetchRanks()
     } catch (error: any) {
       console.error('Error deleting rank:', error)
-      toast.error(error.message || 'Error al eliminar rango')
+      toast.error('Error al eliminar rango: ' + error.message)
     }
   }
 
   const resetForm = () => {
-    setForm({ name: '', abbreviation: '', order: ranks.length + 1, image_url: '' })
     setEditingRank(null)
-    setShowForm(false)
+    setFormData({
+      name: '',
+      abbreviation: '',
+      order: ranks.length + 1,
+      image_url: '',
+      description: '',
+      required_missions: 0,
+      required_flight_hours: 0,
+      required_takeoffs: 0,
+      required_landings: 0,
+      required_kills: 0,
+      minimum_accuracy: 0,
+      minimum_kd_ratio: 0,
+      time_in_previous_rank_days: 0,
+      requirements_enforced: false
+    })
+    setActiveTab('list')
+    setShowRequirements(false)
   }
+
+  const hasRequirements = (rank: Rank) => {
+    return rank.required_missions > 0 ||
+           rank.required_flight_hours > 0 ||
+           rank.required_takeoffs > 0 ||
+           rank.required_landings > 0 ||
+           rank.required_kills > 0 ||
+           rank.minimum_accuracy > 0 ||
+           rank.minimum_kd_ratio > 0 ||
+           rank.time_in_previous_rank_days > 0
+  }
+
+  const columns = [
+    {
+      key: 'name',
+      label: 'Rango',
+      render: (value: string, item: Rank) => (
+        <div className="flex items-center gap-3">
+          {item.image_url ? (
+            <img src={item.image_url} alt={item.name} className="w-8 h-8 object-cover rounded" />
+          ) : (
+            <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+              <Star className="h-4 w-4 text-muted-foreground" />
+            </div>
+          )}
+          <div>
+            <div className="font-medium text-foreground">{value}</div>
+            <div className="text-sm text-muted-foreground">{item.abbreviation}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'order',
+      label: 'Orden',
+      render: (value: number) => (
+        <span className="text-sm text-muted-foreground">#{value}</span>
+      )
+    },
+    {
+      key: 'description',
+      label: 'Descripción',
+      render: (value: string) => (
+        <div className="max-w-xs truncate text-muted-foreground">
+          {value || 'Sin descripción'}
+        </div>
+      )
+    },
+    {
+      key: 'requirements_enforced',
+      label: 'Requisitos',
+      render: (value: boolean, item: Rank) => (
+        <div className="flex items-center gap-2">
+          {hasRequirements(item) && (
+            <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
+              {value ? 'Obligatorios' : 'Opcionales'}
+            </span>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      label: 'Acciones',
+      render: (value: any, item: Rank) => (
+        <div className="flex items-center gap-2">
+          <ActionButton
+            variant="secondary"
+            size="sm"
+            icon={Edit2}
+            onClick={() => handleEdit(item)}
+          >
+            Editar
+          </ActionButton>
+          <ActionButton
+            variant="destructive"
+            size="sm"
+            icon={Trash2}
+            onClick={() => handleDelete(item.id)}
+          >
+            Eliminar
+          </ActionButton>
+        </div>
+      )
+    }
+  ]
+
+  const emptyState = (
+    <EmptyState
+      icon={Star}
+      title="No hay rangos"
+      description="Aún no has creado ningún rango. Crea el primero para comenzar."
+      action={{
+        label: "Crear Primer Rango",
+        onClick: () => setActiveTab('create'),
+        icon: Plus
+      }}
+    />
+  )
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
+      <PageFrame title="Rangos" description="Gestiona los rangos militares del sistema">
+        <LoadingState text="Cargando rangos..." />
+      </PageFrame>
     )
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gestión de Rangos</h2>
-          <p className="text-gray-600">Crear y gestionar rangos militares</p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Nuevo Rango
-        </button>
-      </div>
-
-      {showForm && (
-        <div className="bg-white p-6 rounded-lg border shadow-sm">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">
-              {editingRank ? 'Editar Rango' : 'Nuevo Rango'}
-            </h3>
-            <button onClick={resetForm} className="text-gray-500 hover:text-gray-700">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'create':
+      case 'edit':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre
-                </label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+                <h3 className="text-lg font-semibold text-foreground">
+                  {editingRank ? 'Editar Rango' : 'Crear Nuevo Rango'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {editingRank ? 'Modifica los datos del rango' : 'Completa los datos para crear un nuevo rango'}
+                </p>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Abreviación
-                </label>
-                <input
-                  type="text"
-                  value={form.abbreviation}
-                  onChange={(e) => setForm({ ...form, abbreviation: e.target.value })}
-                  placeholder="ej: CDT, TTE, CAP"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Orden
-              </label>
-              <input
-                type="number"
-                value={form.order}
-                onChange={(e) => setForm({ ...form, order: parseInt(e.target.value) })}
-                min="1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Imagen
-              </label>
-              <div className="flex items-center gap-4">
-                {form.image_url && (
-                  <img src={form.image_url} alt="Preview" className="w-16 h-16 object-cover rounded-lg border" />
-                )}
-                <div className="flex-1">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={uploading}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  {uploading && <p className="text-sm text-blue-600 mt-1">Subiendo imagen...</p>}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
+              <ActionButton
+                variant="secondary"
+                icon={X}
                 onClick={resetForm}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {editingRank ? 'Actualizar' : 'Crear'}
-              </button>
+              </ActionButton>
             </div>
-          </form>
-        </div>
-      )}
 
-      <div className="grid gap-4">
-        {ranks.map((rank) => (
-          <div key={rank.id} className="bg-white p-4 rounded-lg border shadow-sm flex items-center gap-4">
-            <div className="flex-shrink-0">
-              {rank.image_url ? (
-                <img src={rank.image_url} alt={rank.name} className="w-16 h-16 object-cover rounded-lg border" />
-              ) : (
-                <div className="w-16 h-16 bg-gray-100 rounded-lg border flex items-center justify-center">
-                  <Star className="h-8 w-8 text-gray-400" />
+            <form onSubmit={handleSubmit} className="bg-card rounded-lg border p-6 space-y-6">
+              {/* Información Básica */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-foreground flex items-center gap-2">
+                  <Star className="h-4 w-4" />
+                  Información Básica
+                </h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Nombre <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Abreviación <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.abbreviation}
+                      onChange={(e) => setFormData(prev => ({ ...prev, abbreviation: e.target.value }))}
+                      placeholder="ej: CDT, TTE, CAP"
+                      className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Orden <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.order}
+                      onChange={(e) => setFormData(prev => ({ ...prev, order: parseInt(e.target.value) }))}
+                      min="1"
+                      className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                      required
+                    />
+                  </div>
                 </div>
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-gray-900">{rank.name}</h3>
-                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-mono">{rank.abbreviation}</span>
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">#{rank.order}</span>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Descripción
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    rows={2}
+                    placeholder="Describe este rango..."
+                    className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Imagen del Rango
+                  </label>
+                  <div className="flex items-center gap-4">
+                    {formData.image_url && (
+                      <img src={formData.image_url} alt="Preview" className="w-16 h-16 object-cover rounded-lg border" />
+                    )}
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploading}
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                      />
+                      {uploading && <p className="text-sm text-primary mt-1">Subiendo imagen...</p>}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleEdit(rank)}
-                className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              >
-                <Edit className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => handleDelete(rank.id)}
-                className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
+
+              {/* Requisitos */}
+              <div className="border-t pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowRequirements(!showRequirements)}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h4 className="font-medium text-foreground flex items-center gap-2">
+                    <Target className="h-4 w-4" />
+                    Requisitos para Promoción
+                  </h4>
+                  {showRequirements ? '▼' : '▶'}
+                </button>
+
+                {showRequirements && (
+                  <div className="mt-4 space-y-4 bg-muted/20 p-4 rounded-lg">
+                    {/* Requisitos de Vuelo */}
+                    <div>
+                      <h5 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        Requisitos de Vuelo
+                      </h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            Misiones Mínimas
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.required_missions}
+                            onChange={(e) => setFormData(prev => ({ ...prev, required_missions: parseInt(e.target.value) || 0 }))}
+                            min="0"
+                            className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            Horas de Vuelo Mínimas
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.required_flight_hours}
+                            onChange={(e) => setFormData(prev => ({ ...prev, required_flight_hours: parseFloat(e.target.value) || 0 }))}
+                            min="0"
+                            step="0.5"
+                            className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            Despegues Mínimos
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.required_takeoffs}
+                            onChange={(e) => setFormData(prev => ({ ...prev, required_takeoffs: parseInt(e.target.value) || 0 }))}
+                            min="0"
+                            className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            Aterrizajes Mínimos
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.required_landings}
+                            onChange={(e) => setFormData(prev => ({ ...prev, required_landings: parseInt(e.target.value) || 0 }))}
+                            min="0"
+                            className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Requisitos de Combate */}
+                    <div>
+                      <h5 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                        <Trophy className="h-4 w-4" />
+                        Requisitos de Combate
+                      </h5>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            Bajas Mínimas
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.required_kills}
+                            onChange={(e) => setFormData(prev => ({ ...prev, required_kills: parseInt(e.target.value) || 0 }))}
+                            min="0"
+                            className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            Precisión Mínima (%)
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.minimum_accuracy}
+                            onChange={(e) => setFormData(prev => ({ ...prev, minimum_accuracy: parseFloat(e.target.value) || 0 }))}
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            K/D Ratio Mínimo
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.minimum_kd_ratio}
+                            onChange={(e) => setFormData(prev => ({ ...prev, minimum_kd_ratio: parseFloat(e.target.value) || 0 }))}
+                            min="0"
+                            step="0.01"
+                            className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Otros Requisitos */}
+                    <div>
+                      <h5 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                        <Award className="h-4 w-4" />
+                        Otros Requisitos
+                      </h5>
+                      <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">
+                          Tiempo Mínimo en Rango Anterior (días)
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.time_in_previous_rank_days}
+                          onChange={(e) => setFormData(prev => ({ ...prev, time_in_previous_rank_days: parseInt(e.target.value) || 0 }))}
+                          min="0"
+                          className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Requisitos Obligatorios */}
+                    <div className="flex items-center gap-2 pt-2 border-t">
+                      <input
+                        type="checkbox"
+                        id="requirements_enforced"
+                        checked={formData.requirements_enforced}
+                        onChange={(e) => setFormData(prev => ({ ...prev, requirements_enforced: e.target.checked }))}
+                        className="rounded border-input text-primary focus:ring-primary"
+                      />
+                      <label htmlFor="requirements_enforced" className="text-sm text-foreground">
+                        Los requisitos son <strong>obligatorios</strong> para la promoción
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <ActionButton
+                  type="submit"
+                  variant="primary"
+                  icon={Save}
+                >
+                  {editingRank ? 'Actualizar' : 'Crear'} Rango
+                </ActionButton>
+                <ActionButton
+                  type="button"
+                  variant="secondary"
+                  icon={X}
+                  onClick={resetForm}
+                >
+                  Cancelar
+                </ActionButton>
+              </div>
+            </form>
           </div>
-        ))}
+        )
+      
+      case 'list':
+      default:
+        return (
+          <DataTable
+            data={ranks}
+            columns={columns}
+            emptyState={emptyState}
+          />
+        )
+    }
+  }
+
+  return (
+    <PageFrame 
+      title="Rangos" 
+      description="Gestiona los rangos militares del sistema"
+      headerActions={
+        activeTab === 'list' ? (
+          <ActionButton
+            variant="primary"
+            icon={Plus}
+            onClick={() => setActiveTab('create')}
+          >
+            Nuevo Rango
+          </ActionButton>
+        ) : null
+      }
+    >
+      {/* Tabs Navigation */}
+      <div className="border-b border-border mb-6">
+        <nav className="flex space-x-8">
+          <button
+            onClick={() => setActiveTab('list')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'list'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+            }`}
+          >
+            Lista de Rangos
+          </button>
+          <button
+            onClick={() => setActiveTab('create')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'create'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+            }`}
+          >
+            Crear Rango
+          </button>
+        </nav>
       </div>
 
-      {ranks.length === 0 && (
-        <div className="text-center py-12">
-          <Star className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 mb-4">No hay rangos creados aún</p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Crear Primer Rango
-          </button>
-        </div>
-      )}
-    </div>
+      {renderTabContent()}
+    </PageFrame>
   )
 }

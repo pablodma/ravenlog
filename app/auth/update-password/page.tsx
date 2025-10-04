@@ -37,20 +37,30 @@ export default function UpdatePasswordPage() {
       return
     }
 
-    if (passwords.newPassword.length < 6) {
-      toast.error('La contraseña debe tener al menos 6 caracteres')
+    if (passwords.newPassword.length < 8) {
+      toast.error('La contraseña debe tener al menos 8 caracteres')
       return
     }
 
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwords.newPassword)) {
+      toast.error('La contraseña debe contener al menos una mayúscula, una minúscula y un número')
+      return
+    }
+
+    console.log('🔄 UpdatePasswordPage: Iniciando actualización de contraseña')
     setIsSubmitting(true)
 
     try {
+      console.log('🔄 UpdatePasswordPage: Llamando a updatePassword...')
       await updatePassword(passwords.newPassword)
+      console.log('✅ UpdatePasswordPage: Contraseña actualizada exitosamente')
       toast.success('¡Contraseña actualizada exitosamente!')
       router.push('/dashboard')
     } catch (error: any) {
+      console.error('🔴 UpdatePasswordPage: Error:', error)
       toast.error(error.message || 'Error al actualizar la contraseña')
     } finally {
+      console.log('🔄 UpdatePasswordPage: Finalizando proceso')
       setIsSubmitting(false)
     }
   }

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
+import PageFrame from '@/components/ui/PageFrame'
+import ActionButton from '@/components/ui/ActionButton'
 
 export default function CombatRecordsManager() {
   const [records, setRecords] = useState([])
@@ -35,34 +37,34 @@ export default function CombatRecordsManager() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
+      <PageFrame title="Registros de Combate" description="Rastrea participación en misiones y estadísticas de combate">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </PageFrame>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Combat Records</h2>
-          <p className="text-muted-foreground mt-1">Track mission participation and combat statistics</p>
-        </div>
-        <button
-          onClick={() => toast.info('Create functionality coming soon')}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+    <PageFrame 
+      title="Registros de Combate" 
+      description="Rastrea participación en misiones y estadísticas de combate"
+      headerActions={
+        <ActionButton
+          variant="primary"
+          icon={Plus}
+          onClick={() => toast('Create functionality coming soon', { icon: '🚀' })}
         >
-          <Plus className="h-4 w-4" />
-          New Record
-        </button>
-      </div>
-
+          Nuevo Registro
+        </ActionButton>
+      }
+    >
       <div className="bg-muted/30 rounded-lg p-12 text-center">
         <p className="text-muted-foreground">
-          {records.length} combat records in system. Full interface coming soon.
+          {records.length} registros de combate en el sistema. Interfaz completa próximamente.
         </p>
       </div>
-    </div>
+    </PageFrame>
   )
 }
 

@@ -1,5 +1,7 @@
+'use client'
+
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Save, X, Users, Shield } from 'lucide-react'
+import { usePermissions } from '@/hooks/usePermissions'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 
@@ -7,157 +9,161 @@ interface Role {
   id: string
   name: string
   description: string
-  color: string
-  is_system_role: boolean
+  is_system: boolean
+  is_active: boolean
   created_at: string
-  user_count?: number
 }
 
-interface RoleForm {
+interface Permission {
+  id: string
   name: string
   description: string
-  color: string
+  category: string
+  action: string
+  resource: string
 }
 
-const PRESET_COLORS = [
-  '#EF4444', // Red
-  '#F97316', // Orange  
-  '#EAB308', // Yellow
-  '#22C55E', // Green
-  '#06B6D4', // Cyan
-  '#3B82F6', // Blue
-  '#8B5CF6', // Purple
-  '#EC4899', // Pink
-  '#6B7280', // Gray
-  '#1F2937', // Dark Gray
-]
+interface UserRole {
+  id: string
+  user_id: string
+  role_id: string
+  assigned_at: string
+  expires_at?: string
+  is_active: boolean
+  user: {
+    id: string
+    email: string
+    full_name?: string
+  }
+  role: Role
+}
 
 export default function RoleManager() {
+  const { isAdmin, canManageRoles } = usePermissions()
   const [roles, setRoles] = useState<Role[]>([])
+  const [permissions, setPermissions] = useState<Permission[]>([])
+  const [userRoles, setUserRoles] = useState<UserRole[]>([])
   const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [editingRole, setEditingRole] = useState<Role | null>(null)
-  const [form, setForm] = useState<RoleForm>({
-    name: '',
-    description: '',
-    color: PRESET_COLORS[0]
-  })
+  const [activeTab, setActiveTab] = useState<'roles' | 'permissions' | 'assignments'>('roles')
+
+  // Verificar permisos
+  if (!isAdmin() && !canManageRoles()) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <p className="text-red-600">No tienes permisos para gestionar roles.</p>
+      </div>
+    )
+  }
 
   useEffect(() => {
-    fetchRoles()
+    fetchData()
   }, [])
 
-  const fetchRoles = async () => {
+  const fetchData = async () => {
     try {
-      // Obtener roles con conteo de usuarios
-      const { data: rolesData, error } = await (supabase as any)
+      setLoading(true)
+      
+      // Fetch roles
+      const { data: rolesData, error: rolesError } = await supabase
         .from('roles')
+        .select('*')
+        .order('name')
+
+      if (rolesError) throw rolesError
+
+      // Fetch permissions
+      const { data: permissionsData, error: permissionsError } = await supabase
+        .from('permissions')
+        .select('*')
+        .order('category', { ascending: true })
+
+      if (permissionsError) throw permissionsError
+
+      // Fetch user roles
+      const { data: userRolesData, error: userRolesError } = await supabase
+        .from('user_roles')
         .select(`
           *,
-          user_count:profiles(count)
+          user:profiles!user_roles_user_id_fkey(id, email, full_name),
+          role:roles!user_roles_role_id_fkey(*)
         `)
-        .order('created_at', { ascending: true })
+        .order('assigned_at', { ascending: false })
 
-      if (error) throw error
+      if (userRolesError) throw userRolesError
 
-      // Formatear datos para incluir conteo
-      const rolesWithCount = rolesData?.map((role: any) => ({
-        ...role,
-        user_count: role.user_count?.[0]?.count || 0
-      })) || []
-
-      setRoles(rolesWithCount)
+      setRoles(rolesData || [])
+      setPermissions(permissionsData || [])
+      setUserRoles(userRolesData || [])
     } catch (error) {
-      console.error('Error fetching roles:', error)
-      toast.error('Error al cargar roles')
+      console.error('Error fetching data:', error)
+      toast.error('Error al cargar los datos')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+  const createRole = async (name: string, description: string) => {
     try {
-      if (editingRole) {
-        // Actualizar rol existente
-        const { error } = await (supabase as any)
-          .from('roles')
-          .update(form)
-          .eq('id', editingRole.id)
-
-        if (error) throw error
-        toast.success('Rol actualizado exitosamente')
-      } else {
-        // Crear nuevo rol
-        const { error } = await (supabase as any)
-          .from('roles')
-          .insert([{ ...form, is_system_role: false }])
-
-        if (error) throw error
-        toast.success('Rol creado exitosamente')
-      }
-
-      // Resetear formulario y recargar
-      resetForm()
-      fetchRoles()
-    } catch (error: any) {
-      console.error('Error saving role:', error)
-      if (error.code === '23505') {
-        toast.error('Ya existe un rol con ese nombre')
-      } else {
-        toast.error(error.message || 'Error al guardar rol')
-      }
-    }
-  }
-
-  const handleEdit = (role: Role) => {
-    setEditingRole(role)
-    setForm({
-      name: role.name,
-      description: role.description,
-      color: role.color
-    })
-    setShowForm(true)
-  }
-
-  const handleDelete = async (role: Role) => {
-    if (role.is_system_role) {
-      toast.error('No se pueden eliminar roles del sistema')
-      return
-    }
-
-    if (role.user_count && role.user_count > 0) {
-      toast.error(`No se puede eliminar. Hay ${role.user_count} usuario(s) con este rol`)
-      return
-    }
-
-    if (!confirm(`¿Estás seguro de eliminar el rol "${role.name}"?`)) return
-
-    try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('roles')
-        .delete()
-        .eq('id', role.id)
+        .insert({
+          name,
+          description,
+          is_system: false,
+          is_active: true
+        })
 
       if (error) throw error
-      toast.success('Rol eliminado exitosamente')
-      fetchRoles()
-    } catch (error: any) {
-      console.error('Error deleting role:', error)
-      toast.error(error.message || 'Error al eliminar rol')
+
+      toast.success('Rol creado exitosamente')
+      fetchData()
+    } catch (error) {
+      console.error('Error creating role:', error)
+      toast.error('Error al crear el rol')
     }
   }
 
-  const resetForm = () => {
-    setForm({ name: '', description: '', color: PRESET_COLORS[0] })
-    setEditingRole(null)
-    setShowForm(false)
+  const assignRoleToUser = async (userId: string, roleId: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role_id: roleId,
+          assigned_at: new Date().toISOString(),
+          is_active: true
+        })
+
+      if (error) throw error
+
+      toast.success('Rol asignado exitosamente')
+      fetchData()
+    } catch (error) {
+      console.error('Error assigning role:', error)
+      toast.error('Error al asignar el rol')
+    }
+  }
+
+  const removeRoleFromUser = async (userRoleId: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .update({ is_active: false })
+        .eq('id', userRoleId)
+
+      if (error) throw error
+
+      toast.success('Rol removido exitosamente')
+      fetchData()
+    } catch (error) {
+      console.error('Error removing role:', error)
+      toast.error('Error al remover el rol')
+    }
   }
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     )
@@ -165,183 +171,198 @@ export default function RoleManager() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gestión de Roles</h2>
-          <p className="text-gray-600">Crear y gestionar roles del sistema</p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Nuevo Rol
-        </button>
-      </div>
-
-      {/* Formulario */}
-      {showForm && (
-        <div className="bg-white p-6 rounded-lg border shadow-sm">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">
-              {editingRole ? 'Editar Rol' : 'Nuevo Rol'}
-            </h3>
-            <button
-              onClick={resetForm}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre del Rol
-                </label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="ej: Flight Leader"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Color del Rol
-                </label>
-                <div className="flex gap-2 items-center">
-                  <div
-                    className="w-8 h-8 rounded-full border-2 border-gray-300"
-                    style={{ backgroundColor: form.color }}
-                  />
-                  <select
-                    value={form.color}
-                    onChange={(e) => setForm({ ...form, color: e.target.value })}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {PRESET_COLORS.map(color => (
-                      <option key={color} value={color}>
-                        {color}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción
-              </label>
-              <textarea
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="Describe las responsabilidades de este rol..."
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {editingRole ? 'Actualizar' : 'Crear'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Lista de roles */}
-      <div className="bg-white rounded-lg border shadow-sm">
-        <div className="px-6 py-4 border-b">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Roles Existentes ({roles.length})
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-4 py-5 sm:p-6">
+          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+            Gestión de Roles y Permisos
           </h3>
-        </div>
-        <div className="p-6">
-          <div className="grid gap-4">
-            {roles.map((role) => (
-              <div
-                key={role.id}
-                className="flex justify-between items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          
+          {/* Tabs */}
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('roles')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'roles'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
               >
-                <div className="flex items-center gap-4 flex-1">
-                  {/* Color badge */}
-                  <div
-                    className="w-4 h-4 rounded-full border border-gray-300"
-                    style={{ backgroundColor: role.color }}
-                  />
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium text-gray-900">{role.name}</h4>
-                      {role.is_system_role && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">
-                          <Shield className="h-3 w-3" />
-                          Sistema
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-600 text-sm">{role.description}</p>
-                    <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                      <Users className="h-3 w-3" />
-                      {role.user_count || 0} usuario{(role.user_count || 0) !== 1 ? 's' : ''}
-                    </div>
-                  </div>
-                </div>
+                Roles
+              </button>
+              <button
+                onClick={() => setActiveTab('permissions')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'permissions'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Permisos
+              </button>
+              <button
+                onClick={() => setActiveTab('assignments')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'assignments'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Asignaciones
+              </button>
+            </nav>
+          </div>
 
-                <div className="flex items-center gap-2">
+          {/* Content */}
+          <div className="mt-6">
+            {activeTab === 'roles' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-md font-medium text-gray-900">Roles del Sistema</h4>
                   <button
-                    onClick={() => handleEdit(role)}
-                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    onClick={() => {
+                      const name = prompt('Nombre del rol:')
+                      const description = prompt('Descripción del rol:')
+                      if (name && description) {
+                        createRole(name, description)
+                      }
+                    }}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
                   >
-                    <Edit className="h-4 w-4" />
+                    Crear Rol
                   </button>
-                  {!role.is_system_role && (
-                    <button
-                      onClick={() => handleDelete(role)}
-                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      disabled={!!(role.user_count && role.user_count > 0)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
+                </div>
+                
+                <div className="grid gap-4">
+                  {roles.map((role) => (
+                    <div key={role.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h5 className="font-medium text-gray-900">{role.name}</h5>
+                          <p className="text-sm text-gray-600">{role.description}</p>
+                          <div className="mt-2 flex space-x-2">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              role.is_system ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {role.is_system ? 'Sistema' : 'Personalizado'}
+                            </span>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              role.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {role.is_active ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            )}
+
+            {activeTab === 'permissions' && (
+              <div className="space-y-4">
+                <h4 className="text-md font-medium text-gray-900">Permisos del Sistema</h4>
+                
+                <div className="grid gap-4">
+                  {permissions.map((permission) => (
+                    <div key={permission.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h5 className="font-medium text-gray-900">{permission.name}</h5>
+                          <p className="text-sm text-gray-600">{permission.description}</p>
+                          <div className="mt-2 flex space-x-2">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {permission.category}
+                            </span>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              {permission.action}
+                            </span>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              {permission.resource}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'assignments' && (
+              <div className="space-y-4">
+                <h4 className="text-md font-medium text-gray-900">Asignaciones de Roles</h4>
+                
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Usuario
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Rol
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Asignado
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Estado
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {userRoles.map((userRole) => (
+                        <tr key={userRole.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {userRole.user?.full_name || 'Sin nombre'}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {userRole.user?.email}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {userRole.role?.name}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(userRole.assigned_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              userRole.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {userRole.is_active ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            {userRole.is_active && (
+                              <button
+                                onClick={() => removeRoleFromUser(userRole.id)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                Remover
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-
-      {roles.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">No hay roles creados aún</p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Crear Primer Rol
-          </button>
-        </div>
-      )}
     </div>
   )
 }
