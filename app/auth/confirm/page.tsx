@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 
-export default function AuthConfirmPage() {
+function AuthConfirmContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
@@ -134,4 +134,19 @@ export default function AuthConfirmPage() {
   }
 
   return null
+}
+
+export default function AuthConfirmPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Verificando enlace...</p>
+        </div>
+      </div>
+    }>
+      <AuthConfirmContent />
+    </Suspense>
+  )
 }
